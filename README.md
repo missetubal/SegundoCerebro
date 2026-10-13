@@ -13,9 +13,16 @@ App pessoal de pilares, hábitos e check-ins (Fase 1). Stack: **Next.js App Rout
 
 Checklist Ops (não versionar valores reais):
 
-1. **Neon**
-   - Criar projeto/banco
-   - Copiar a connection string → `DATABASE_URL`
+1. **Neon (CLI no teu PC — preferido)**
+   - Projeto já linkado em `.neon` / `neon.ts` (org `org-square-breeze-99043810`, project `morning-unit-04218914`, branch `production`)
+   - No teu computador (browser local):
+     ```bash
+     git checkout cursor/fatia-0-bootstrap-c12a && git pull
+     pnpm install
+     npx neon@latest login          # abre o browser — concluir OAuth
+     npx neon@latest deploy         # provisiona + grava DATABASE_URL em .env.local
+     ```
+   - Alternativa manual: copiar connection string do console Neon → `DATABASE_URL`
 2. **Google Cloud OAuth**
    - Criar OAuth Client (tipo *Web application*)
    - Authorized redirect URI: `http://localhost:3000/api/auth/callback/google` (e a URL de produção depois)
@@ -27,20 +34,20 @@ Checklist Ops (não versionar valores reais):
    - Local: `AUTH_URL=http://localhost:3000`
    - Produção: URL do deploy Vercel
 
-Modelo: copie `.env.example` para `.env.local` e preencha.
+`neon deploy` preenche `DATABASE_URL`. Completa o resto no `.env.local` (Auth Google + `AUTH_SECRET`). Modelo: `.env.example`.
 
 ## Rodar localmente
 
 ```bash
 pnpm install
-cp .env.example .env.local
-# edite .env.local com os segredos acima
+# após neon login + neon deploy (ou cp .env.example .env.local e preencher)
 
-pnpm db:generate   # gera SQL a partir do schema (já versionado em drizzle/)
-pnpm db:migrate    # aplica migrações no Postgres apontado por DATABASE_URL
-
+pnpm db:migrate    # aplica migrações no Postgres (DATABASE_URL)
+pnpm build         # deve passar
 pnpm dev
 ```
+
+Prova do banco: `curl -s http://localhost:3000/api/health` → `{"ok":true,"database":"up"}`.
 
 Abra [http://localhost:3000](http://localhost:3000).
 
