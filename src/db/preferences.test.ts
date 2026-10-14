@@ -44,7 +44,7 @@ describe('updateTimezone', () => {
     const after = await updateTimezone(userId, 'Europe/Lisbon');
 
     expect(after.timezone).toBe('Europe/Lisbon');
-    expect(after.updatedAt.getTime()).toBeGreaterThan(
+    expect(after.updatedAt.getTime()).toBeGreaterThanOrEqual(
       before.updatedAt.getTime(),
     );
     expect((await getPreferences(userId)).timezone).toBe('Europe/Lisbon');

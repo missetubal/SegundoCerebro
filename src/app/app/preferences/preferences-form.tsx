@@ -36,6 +36,7 @@ export function PreferencesForm({ timezone, journalTemplate, timeZones }: Props)
   const browserTimeZone = useBrowserTimeZone();
   const showSuggestion =
     browserTimeZone !== null &&
+    timeZones.includes(browserTimeZone) &&
     browserTimeZone !== timezone &&
     browserTimeZone !== selected;
 

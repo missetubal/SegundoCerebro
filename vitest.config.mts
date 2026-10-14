@@ -9,8 +9,10 @@ function readEnvFile(path: string): Record<string, string> {
 }
 
 const testEnv = readEnvFile('.env.test');
-const realEnv = readEnvFile('.env');
-assertTestDatabaseUrl(testEnv.DATABASE_URL, realEnv.DATABASE_URL);
+assertTestDatabaseUrl(testEnv.DATABASE_URL, [
+  readEnvFile('.env').DATABASE_URL,
+  readEnvFile('.env.local').DATABASE_URL,
+]);
 
 export default defineConfig({
   resolve: {

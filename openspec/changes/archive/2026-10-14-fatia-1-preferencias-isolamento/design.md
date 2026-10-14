@@ -44,7 +44,7 @@ Requisitos: ver `specs/user-preferences/spec.md` e `specs/data-isolation/spec.md
 
 ### 6. Testes: Vitest + branch Neon de teste
 - Vitest em ambiente `node`, testes em `src/**/*.test.ts`.
-- `vitest.config.mts` carrega `.env.test` (ignorado no Git) com `DATABASE_URL` da branch Neon `dev` (já existente; testes só criam e apagam usuários `test-*`, então convivem com dados de dev). O teste aborta se `DATABASE_URL` for igual ao do `.env` (proteção contra rodar no banco real).
+- `vitest.config.mts` carrega `.env.test` (ignorado no Git) com `DATABASE_URL` da branch Neon `dev` (já existente; testes só criam e apagam usuários `test-*`, então convivem com dados de dev). O teste aborta se `DATABASE_URL` apontar para o mesmo banco (endpoint sem `-pooler` + porta + nome do banco) que `.env` ou `.env.local`; a mesma checagem roda no `drizzle.config.ts` antes de `db:migrate:test`.
 - Migrações na branch de teste: `npm run db:migrate:test` (drizzle-kit com env de teste).
 - Fixtures criam usuários com ids aleatórios e removem no `afterAll` (cascade apaga preferências).
 - Testes da Server Action: `vi.mock('@/auth')` para simular sessão do usuário A; `next/cache` mockado. Verifica que `userId` de B no `FormData` é ignorado.
