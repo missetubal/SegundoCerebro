@@ -19,9 +19,9 @@
 
 ## 4. Camada de dados de horizontes
 
-- [ ] 4.1 Criar `src/db/horizons.ts` com `listHorizons` (chama `getPreferences` e executa o seed por claim em `horizons_seeded_at` num único statement); verificar com testes: primeiro acesso traz Curto/Médio/Longo/Contínuo em ordem, `Promise.all` de duas chamadas gera exatamente 4, excluir todos e listar de novo retorna vazio
-- [ ] 4.2 Adicionar `createHorizon` (append), `renameHorizon`, `moveHorizon`, `deleteHorizon` com `duplicate_name`; verificar com testes de append, renomear mantendo posição, mover e duplicado case-insensitive
-- [ ] 4.3 Teste de isolamento: renomear "Curto" de A não altera o de B; operações como A com id de B não têm efeito
+- [x] 4.1 Criar `src/db/horizons.ts` com `listHorizons` (chama `getPreferences` e executa o seed por claim em `horizons_seeded_at` num único statement); verificar com testes: primeiro acesso traz Curto/Médio/Longo/Contínuo em ordem, `Promise.all` de duas chamadas gera exatamente 4, excluir todos e listar de novo retorna vazio
+- [x] 4.2 Adicionar `createHorizon` (append), `renameHorizon`, `moveHorizon`, `deleteHorizon` com `duplicate_name`; verificar com testes de append, renomear mantendo posição, mover e duplicado case-insensitive
+- [x] 4.3 Teste de isolamento: renomear "Curto" de A não altera o de B; operações como A com id de B não têm efeito
 
 ## 5. Server Actions
 
