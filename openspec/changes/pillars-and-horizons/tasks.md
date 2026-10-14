@@ -25,8 +25,8 @@
 
 ## 5. Server Actions
 
-- [ ] 5.1 Criar `src/app/app/pillars/actions.ts` (criar, editar, mover, arquivar, desarquivar, excluir) com `requireUserId()`, validação, mensagens neutras em pt-BR ("Item não encontrado", nome duplicado com sugestão de desarquivar), `refresh()` ou `redirect`; verificar com `actions.test.ts`: entrada inválida não grava, id de B com sessão de A não altera B, `userId` no `FormData` é ignorado, sem sessão redireciona
-- [ ] 5.2 Criar `src/app/app/horizons/actions.ts` (criar, renomear, mover, excluir) com o mesmo padrão; verificar com `actions.test.ts` equivalente
+- [x] 5.1 Criar `src/app/app/pillars/actions.ts` (criar, editar, mover, arquivar, desarquivar, excluir) com `requireUserId()`, validação, mensagens neutras em pt-BR ("Item não encontrado", nome duplicado com sugestão de desarquivar), `refresh()` ou `redirect`; verificar com `actions.test.ts`: entrada inválida não grava, id de B com sessão de A não altera B, `userId` no `FormData` é ignorado, sem sessão redireciona
+- [x] 5.2 Criar `src/app/app/horizons/actions.ts` (criar, renomear, mover, excluir) com o mesmo padrão; verificar com `actions.test.ts` equivalente
 
 ## 6. Interface de pilares
 
