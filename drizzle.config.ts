@@ -6,9 +6,12 @@ import { assertTestDatabaseUrl } from './src/test/env-guard.mjs';
 const envFile = process.env.DRIZZLE_ENV_FILE;
 
 if (envFile === '.env.test') {
-  const realUrls = ['.env', '.env.local'].map((path) =>
-    existsSync(path) ? parse(readFileSync(path)).DATABASE_URL : undefined,
-  );
+  const realUrls = [
+    process.env.DATABASE_URL,
+    ...['.env', '.env.local'].map((path) =>
+      existsSync(path) ? parse(readFileSync(path)).DATABASE_URL : undefined,
+    ),
+  ];
   config({ path: envFile, override: true, quiet: true });
   assertTestDatabaseUrl(process.env.DATABASE_URL, realUrls);
 } else {

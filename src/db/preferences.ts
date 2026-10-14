@@ -15,6 +15,9 @@ export async function getPreferences(userId: string): Promise<Preferences> {
     .select()
     .from(userPreferences)
     .where(eq(userPreferences.userId, userId));
+  if (!preferences) {
+    throw new Error(`Preferences not found for user ${userId}`);
+  }
   return preferences;
 }
 

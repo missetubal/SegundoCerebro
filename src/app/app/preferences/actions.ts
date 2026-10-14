@@ -37,7 +37,14 @@ export async function updateTimezoneAction(
     };
   }
 
-  await updateTimezone(userId, parsed.data);
+  try {
+    await updateTimezone(userId, parsed.data);
+  } catch {
+    return {
+      status: 'error',
+      message: 'Não foi possível salvar agora. Tente de novo em instantes.',
+    };
+  }
   refresh();
   return { status: 'success', timezone: parsed.data };
 }

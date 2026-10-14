@@ -10,6 +10,7 @@ function readEnvFile(path: string): Record<string, string> {
 
 const testEnv = readEnvFile('.env.test');
 assertTestDatabaseUrl(testEnv.DATABASE_URL, [
+  process.env.DATABASE_URL,
   readEnvFile('.env').DATABASE_URL,
   readEnvFile('.env.local').DATABASE_URL,
 ]);
