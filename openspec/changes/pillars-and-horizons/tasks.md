@@ -42,5 +42,5 @@
 ## 8. Navegação e fechamento
 
 - [ ] 8.1 Adicionar links "Pilares" e "Horizontes" em `src/app/app/page.tsx` (e remover "pilares" de "Em breve"); verificar navegação e que `/app/pillars`, `/app/pillars/<id>` e `/app/horizons` sem sessão redirecionam para `/signin`
-- [ ] 8.2 Rodar `npm run lint`, `npm test` e `npm run build` e verificar os três verdes (sem erro de prerender nas rotas com `[id]`)
+- [x] 8.2 Rodar `npm run lint`, `npm test` e `npm run build` e verificar os três verdes (sem erro de prerender nas rotas com `[id]`)
 - [ ] 8.3 Aplicar `npm run db:migrate` no banco real e fazer smoke test manual: login, criar/editar/arquivar/excluir pilar, abrir horizontes (padrões criados), renomear um, sair
