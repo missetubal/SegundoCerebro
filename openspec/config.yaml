@@ -1,0 +1,42 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projeto: Segundo Cérebro — app web pessoal para pilares, metas, hábitos,
+  check-ins e medicamentos. Docs de produto em docs/00..08.
+  Stack: Next.js 16 (App Router, cacheComponents ligado) + TypeScript +
+  Tailwind; PostgreSQL no Neon via Drizzle (driver neon-http); Auth.js v5
+  com Google e DrizzleAdapter; npm; deploy na Vercel.
+  Regras: isolamento por user_id em toda query, userId sempre da sessão no
+  servidor; timestamps em UTC e entry_date no fuso do usuário; ausência de
+  registro não é falha; linguagem sem culpa; medicamentos sem aconselhamento.
+  Nomes: variáveis, funções, tipos, arquivos, pastas, tabelas/colunas e
+  rotas/URLs, descrições de testes e mensagens de erro para desenvolvedor
+  sempre em inglês (ex.: /app/preferences). Textos exibidos ao
+  usuário em pt-BR.
+  Next 16: APIs diferem de versões antigas; consultar node_modules/next/dist/docs.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
