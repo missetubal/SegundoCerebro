@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { auth, signOut } from '@/auth';
@@ -9,6 +10,9 @@ export default function AppHome() {
         <Greeting />
       </Suspense>
       <p>Em breve: check-in, hábitos e pilares.</p>
+      <Link href='/app/preferences' className='underline'>
+        Preferências
+      </Link>
       <form
         action={async () => {
           'use server';
