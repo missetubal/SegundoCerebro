@@ -11,11 +11,11 @@
 
 ## 3. Camada de dados de pilares
 
-- [ ] 3.1 Criar `src/db/pillars.ts` com `createPillar` (append no fim dos ativos em um statement, `duplicate_name` em `23505`), `listPillars` (`{ active, archived }` ordenados por `sort_order, created_at`) e `getPillar`; verificar com testes de ordem, append e nome duplicado com outra capitalização e contra pilar arquivado
-- [ ] 3.2 Adicionar `updatePillar` (sem mudar posição/estado, permite limpar cor/ícone, `updated_at`) e verificar com teste
-- [ ] 3.3 Adicionar `movePillar(userId, id, 'up' | 'down')` com troca de par em um statement; verificar com testes de mover para cima/baixo e no-op nos limites
-- [ ] 3.4 Adicionar `archivePillar`, `unarchivePillar` (volta no fim dos ativos) e `deletePillar`; verificar com testes
-- [ ] 3.5 Teste de isolamento: usuários A e B; `listPillars(A)` não traz B; `getPillar/update/move/archive/unarchive/delete` como A com id de B retornam "não encontrado" e B fica intacto; mesmo nome permitido entre usuários
+- [x] 3.1 Criar `src/db/pillars.ts` com `createPillar` (append no fim dos ativos em um statement, `duplicate_name` em `23505`), `listPillars` (`{ active, archived }` ordenados por `sort_order, created_at`) e `getPillar`; verificar com testes de ordem, append e nome duplicado com outra capitalização e contra pilar arquivado
+- [x] 3.2 Adicionar `updatePillar` (sem mudar posição/estado, permite limpar cor/ícone, `updated_at`) e verificar com teste
+- [x] 3.3 Adicionar `movePillar(userId, id, 'up' | 'down')` com renumeração da lista ativa em um statement; verificar com testes de mover para cima/baixo e no-op nos limites
+- [x] 3.4 Adicionar `archivePillar`, `unarchivePillar` (volta no fim dos ativos) e `deletePillar`; verificar com testes
+- [x] 3.5 Teste de isolamento: usuários A e B; `listPillars(A)` não traz B; `getPillar/update/move/archive/unarchive/delete` como A com id de B retornam "não encontrado" e B fica intacto; mesmo nome permitido entre usuários
 
 ## 4. Camada de dados de horizontes
 
