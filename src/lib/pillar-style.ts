@@ -22,6 +22,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
+import { createElement } from 'react';
 import {
   isPillarColor,
   isPillarIcon,
@@ -106,4 +107,8 @@ export function pillarColorStyle(color: string | null): ColorStyle {
 
 export function pillarIcon(icon: string | null): LucideIcon {
   return isPillarIcon(icon) ? ICONS[icon] : DEFAULT_PILLAR_ICON;
+}
+
+export function renderPillarIcon(icon: string | null, className: string) {
+  return createElement(pillarIcon(icon), { className, 'aria-hidden': true });
 }
