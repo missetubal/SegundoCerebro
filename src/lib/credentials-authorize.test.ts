@@ -50,6 +50,19 @@ describe('authorizeCredentials', () => {
     expect(user).toEqual({ id: userId, name: 'Ana', email, image: null });
   });
 
+  it('clears login failures after a successful login', async () => {
+    const { email, userId } = await createAccount();
+    await failTimes(email, 4);
+
+    await expect(
+      authorizeCredentials({ email, password: PASSWORD }),
+    ).resolves.toMatchObject({ id: userId });
+
+    await expect(
+      authorizeCredentials({ email, password: PASSWORD }),
+    ).resolves.toMatchObject({ id: userId });
+  });
+
   it('returns null for a wrong password, an unknown email and a Google-only account', async () => {
     const { email } = await createAccount();
     const googleUserId = await fixtures.createUser();
@@ -96,10 +109,11 @@ describe('authorizeCredentials', () => {
 
   it('ignores failures older than 15 minutes', async () => {
     const { email, userId } = await createAccount();
-    const old = new Date(Date.now() - 16 * 60 * 1000);
-    await db
-      .insert(loginFailures)
-      .values(Array.from({ length: 5 }, () => ({ email, createdAt: old })));
+    await db.insert(loginFailures).values({
+      email,
+      failureCount: 5,
+      windowStartedAt: new Date(Date.now() - 16 * 60 * 1000),
+    });
 
     await expect(
       authorizeCredentials({ email, password: PASSWORD }),

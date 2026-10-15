@@ -45,10 +45,20 @@ function parseHash(stored: string) {
   if (![N, r, p].every((value) => Number.isSafeInteger(value) && value > 0)) {
     return null;
   }
+  // Cap params / key length to defaults so a crafted stored hash cannot DoS verify.
+  if (
+    N > DEFAULT_PARAMS.N ||
+    r > DEFAULT_PARAMS.r ||
+    p > DEFAULT_PARAMS.p
+  ) {
+    return null;
+  }
 
   const salt = Buffer.from(parts[4], 'base64');
   const key = Buffer.from(parts[5], 'base64');
-  if (salt.length === 0 || key.length === 0) return null;
+  if (salt.length === 0 || key.length === 0 || key.length > KEY_BYTES) {
+    return null;
+  }
 
   return { params: { N, r, p }, salt, key };
 }

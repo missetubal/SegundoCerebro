@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { loginFailures, userPasswords, users } from '@/db/schema';
 import { createUserFixtures } from '@/test/fixtures';
 import {
+  clearLoginFailures,
   countRecentLoginFailures,
   createPasswordUser,
   findPasswordUserByEmail,
@@ -49,6 +50,19 @@ describe('createPasswordUser', () => {
     expect(password.passwordHash).toBe('hash-a');
   });
 
+  it('stores the email in lowercase', async () => {
+    const local = `Test-${crypto.randomUUID()}`;
+    const email = `${local}@test.local`;
+    failureEmails.push(email.toLowerCase());
+
+    const result = await createTrackedPasswordUser(email.toUpperCase());
+
+    expect(result.status).toBe('created');
+    if (result.status !== 'created') return;
+    const [user] = await db.select().from(users).where(eq(users.id, result.userId));
+    expect(user.email).toBe(email.toLowerCase());
+  });
+
   it('reports email_taken and keeps the existing account untouched', async () => {
     const email = uniqueEmail();
     const first = await createTrackedPasswordUser(email, 'hash-a');
@@ -63,6 +77,15 @@ describe('createPasswordUser', () => {
       .where(eq(userPasswords.userId, first.userId));
     expect(password.passwordHash).toBe('hash-a');
     expect(await db.$count(users, eq(users.email, email))).toBe(1);
+  });
+
+  it('reports email_taken for a different casing of the same email', async () => {
+    const email = uniqueEmail();
+    await createTrackedPasswordUser(email, 'hash-a');
+
+    const second = await createTrackedPasswordUser(email.toUpperCase(), 'hash-b');
+
+    expect(second).toEqual({ status: 'email_taken' });
   });
 });
 
@@ -110,25 +133,33 @@ describe('login failures', () => {
     expect(await countRecentLoginFailures(other)).toBe(1);
   });
 
+  it('increments atomically and returns the new count', async () => {
+    const email = uniqueEmail();
+
+    await expect(recordLoginFailure(email)).resolves.toBe(1);
+    await expect(recordLoginFailure(email)).resolves.toBe(2);
+    await expect(recordLoginFailure(email)).resolves.toBe(3);
+  });
+
   it('ignores failures older than the window', async () => {
     const email = uniqueEmail();
     await db.insert(loginFailures).values({
       email,
-      createdAt: new Date(Date.now() - 16 * 60 * 1000),
+      failureCount: 5,
+      windowStartedAt: new Date(Date.now() - 16 * 60 * 1000),
     });
 
     expect(await countRecentLoginFailures(email)).toBe(0);
+    await expect(recordLoginFailure(email)).resolves.toBe(1);
   });
 
-  it('removes failures older than one day when recording a new one', async () => {
+  it('clears failures for that email', async () => {
     const email = uniqueEmail();
-    await db.insert(loginFailures).values({
-      email,
-      createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
-    });
-
+    await recordLoginFailure(email);
     await recordLoginFailure(email);
 
-    expect(await db.$count(loginFailures, eq(loginFailures.email, email))).toBe(1);
+    await clearLoginFailures(email);
+
+    expect(await countRecentLoginFailures(email)).toBe(0);
   });
 });

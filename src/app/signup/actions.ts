@@ -19,6 +19,10 @@ const PASSWORD_ACCOUNT_EXISTS =
 const GOOGLE_ACCOUNT_EXISTS =
   'Este e-mail já é usado por uma conta Google. Entre com Google.';
 
+function accountExistsMessage(passwordHash: string | null | undefined): string {
+  return passwordHash ? PASSWORD_ACCOUNT_EXISTS : GOOGLE_ACCOUNT_EXISTS;
+}
+
 async function registerAccount(input: {
   name: string;
   email: string;
@@ -26,7 +30,7 @@ async function registerAccount(input: {
 }): Promise<string | null> {
   const existing = await findPasswordUserByEmail(input.email);
   if (existing) {
-    return existing.passwordHash ? PASSWORD_ACCOUNT_EXISTS : GOOGLE_ACCOUNT_EXISTS;
+    return accountExistsMessage(existing.passwordHash);
   }
 
   const result = await createPasswordUser({
@@ -34,7 +38,11 @@ async function registerAccount(input: {
     email: input.email,
     passwordHash: await hashPassword(input.password),
   });
-  return result.status === 'email_taken' ? PASSWORD_ACCOUNT_EXISTS : null;
+  if (result.status !== 'email_taken') return null;
+
+  // Unique-violation race: re-fetch and branch on passwordHash (same as L28–29).
+  const raced = await findPasswordUserByEmail(input.email);
+  return accountExistsMessage(raced?.passwordHash);
 }
 
 export async function signUpAction(
@@ -57,6 +65,9 @@ export async function signUpAction(
   });
   if (!parsed.success) return fail(parsed.error.issues[0].message);
 
+  // Known risk (accepted): no email verification — an attacker can register
+  // someone else's address and block Google sign-in for that email until
+  // verify-email ships. See PR #4 "Conhecidos".
   try {
     const refusal = await registerAccount(parsed.data);
     if (refusal) return fail(refusal);

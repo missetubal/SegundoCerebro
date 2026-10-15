@@ -67,4 +67,13 @@ describe('signInSchema', () => {
         .success,
     ).toBe(false);
   });
+
+  it('rejects a password longer than 128 characters', () => {
+    expect(
+      signInSchema.safeParse({
+        email: 'ana@exemplo.com',
+        password: 'a'.repeat(129),
+      }).success,
+    ).toBe(false);
+  });
 });

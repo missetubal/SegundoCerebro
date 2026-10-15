@@ -1,22 +1,29 @@
+import { sql } from 'drizzle-orm';
 import {
-  index,
   integer,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccountType } from 'next-auth/adapters';
 
-export const users = pgTable('user', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text('name'),
-  email: text('email').unique(),
-  emailVerified: timestamp('emailVerified', { mode: 'date' }),
-  image: text('image'),
-});
+export const users = pgTable(
+  'user',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text('name'),
+    email: text('email'),
+    emailVerified: timestamp('emailVerified', { mode: 'date' }),
+    image: text('image'),
+  },
+  (table) => [
+    uniqueIndex('user_email_lower_idx').on(sql`lower(${table.email})`),
+  ],
+);
 
 export const accounts = pgTable(
   'account',
@@ -71,24 +78,14 @@ export const userPasswords = pgTable('user_password', {
     .defaultNow(),
 });
 
-export const loginFailures = pgTable(
-  'login_failure',
-  {
-    id: text('id')
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    email: text('email').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (failure) => [
-    index('login_failure_email_created_at_idx').on(
-      failure.email,
-      failure.createdAt,
-    ),
-  ],
-);
+/** One row per email: atomic upsert increments failure_count within the window. */
+export const loginFailures = pgTable('login_failure', {
+  email: text('email').primaryKey(),
+  failureCount: integer('failure_count').notNull().default(0),
+  windowStartedAt: timestamp('window_started_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 export const userPreferences = pgTable('user_preference', {
   userId: text('user_id')

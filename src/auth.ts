@@ -4,15 +4,18 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { db } from '@/db';
 import { accounts, sessions, users, verificationTokens } from '@/db/schema';
+import { withNormalizedEmails } from '@/lib/auth-adapter';
 import { authorizeCredentials } from '@/lib/credentials-authorize';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter: withNormalizedEmails(
+    DrizzleAdapter(db, {
+      usersTable: users,
+      accountsTable: accounts,
+      sessionsTable: sessions,
+      verificationTokensTable: verificationTokens,
+    }),
+  ),
   session: { strategy: 'jwt' },
   providers: [
     Google,

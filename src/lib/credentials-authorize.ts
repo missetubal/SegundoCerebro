@@ -1,7 +1,7 @@
 import 'server-only';
 import { CredentialsSignin } from 'next-auth';
 import {
-  countRecentLoginFailures,
+  clearLoginFailures,
   findPasswordUserByEmail,
   recordLoginFailure,
 } from '@/db/credentials';
@@ -35,7 +35,10 @@ export async function authorizeCredentials(
   if (!parsed.success) return null;
   const { email, password } = parsed.data;
 
-  if ((await countRecentLoginFailures(email)) >= MAX_LOGIN_FAILURES) {
+  // Reserve a slot first (atomic upsert). Parallel attempts serialize on the row lock.
+  // Fail-closed when the window already exceeds the max.
+  const failures = await recordLoginFailure(email);
+  if (failures > MAX_LOGIN_FAILURES) {
     throw new RateLimitedSignin();
   }
 
@@ -46,9 +49,9 @@ export async function authorizeCredentials(
   );
 
   if (!user?.passwordHash || !matches) {
-    await recordLoginFailure(email);
     return null;
   }
 
+  await clearLoginFailures(email);
   return { id: user.id, name: user.name, email: user.email, image: user.image };
 }

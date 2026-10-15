@@ -3,8 +3,8 @@
 - `src/auth.ts`: Auth.js v5 (`next-auth@5.0.0-beta.32`) com `DrizzleAdapter` e só o provider Google. Sem `session.strategy`, o Auth.js usa sessão no banco (`session`) porque há adapter.
 - `requireUserId()` (`src/lib/session.ts`) lê `session.user.id`. Com sessão no banco, o wrapper do `next-auth` monta `session.user` a partir do usuário do adapter, que inclui `id`.
 - O Auth.js recusa o provider `Credentials` com sessão no banco (`UnsupportedStrategy` em `@auth/core/lib/utils/assert.js`) e, com sessão JWT, o callback `session` padrão não copia o `id` (só `name`, `email`, `image`).
-- `user.email` tem índice único sensível a maiúsculas; e-mails do Google chegam em minúsculas.
-- Driver `neon-http`: sem transação interativa; `db.batch([...])` executa os statements numa transação.
+- `user.email` usa índice único em `lower(email)`; adapter e cadastro normalizam para minúsculas.
+- Driver `neon-http`: sem transação interativa; `db.batch([...])` executa os statements numa transação; rate limit usa upsert atômico (row lock).
 - Sem `proxy`/middleware: cada página da área logada chama `requireUserId()`.
 
 Motivação em `proposal.md`; requisitos em `specs/password-auth/spec.md`.
@@ -39,10 +39,10 @@ Formato `scrypt$<N>$<r>$<p>$<salt base64>$<hash base64>`, `N = 2^15`, `r = 8`, `
 - E-mail desconhecido ou conta sem senha: o `authorize` verifica contra um hash fixo de mentira para manter o tempo de resposta parecido.
 
 ### 4. Limite de tentativas em `login_failure`
-`login_failure(id, email text, created_at timestamptz)`, índice `(email, created_at)`.
-- Antes de verificar a senha: `count(*) where email = $1 and created_at > now() - interval '15 minutes'`; com 5 ou mais, recusa com `RateLimitedSignin`.
-- Senha incorreta (ou e-mail sem conta com senha): insere uma falha. Na mesma chamada, apaga falhas com mais de 1 dia (limpeza oportunista).
-- Login correto não apaga falhas anteriores (evita que quem acerta de vez em quando zere a contagem do atacante).
+`login_failure(email PK, failure_count, window_started_at)` — uma linha por e-mail.
+- Cada tentativa (antes do verify) faz upsert atômico que incrementa `failure_count` na janela de 15 min (ou reinicia a janela se expirou). Row lock do `ON CONFLICT` serializa paralelos.
+- Se o contador após o upsert for `> 5`, lança `RateLimitedSignin` (fail-closed) sem verificar a senha.
+- Senha incorreta: o slot já reservado permanece. Login correto: apaga a linha daquele e-mail (evita lock por quase-limite + typo).
 - Alternativa: regra de rate limit no Vercel Firewall. Complementar, não substitui: limita por IP, não por e-mail. Fica como recomendação de operação.
 
 ### 5. Provider `Credentials` e erros
@@ -54,7 +54,7 @@ Formato `scrypt$<N>$<r>$<p>$<salt base64>$<hash base64>`, `N = 2^15`, `r = 8`, `
 ### 6. Cadastro
 - `/signup` com Server Action: `zod` (nome 1–80, e-mail válido normalizado, senha 8–128).
 - Consulta por `lower(email)`: se existe e tem senha → orientar login com senha; se existe sem senha → orientar Google.
-- Cria `user` e `user_password` com `db.batch` (transacional). Violação de unicidade em corrida (`23505`) → mesma mensagem de "já existe conta com senha".
+- Cria `user` e `user_password` com `db.batch` (transacional). Violação de unicidade em corrida (`23505`) → re-fetch e mensagem conforme `passwordHash` (senha vs Google).
 - Depois chama `signIn('credentials', …)` para entrar direto em `/app`.
 ### 7. Módulos
 - `src/lib/password.ts`: `hashPassword`, `verifyPassword` (puro, testável).

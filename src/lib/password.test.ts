@@ -29,6 +29,11 @@ describe('hashPassword / verifyPassword', () => {
     'scrypt$abc$8$1$c2FsdA==$a2V5',
     'scrypt$32768$8$1$$a2V5',
     'scrypt$32768$8$1$c2FsdA==',
+    // Caps: N/r/p or keylen above DEFAULT_PARAMS must not run scrypt
+    'scrypt$65536$8$1$c2FsdA==$a2V5',
+    'scrypt$32768$16$1$c2FsdA==$a2V5',
+    'scrypt$32768$8$2$c2FsdA==$a2V5',
+    `scrypt$32768$8$1$c2FsdA==$${Buffer.alloc(65).toString('base64')}`,
   ])('returns false for a malformed hash %j', async (stored) => {
     await expect(verifyPassword('anything', stored)).resolves.toBe(false);
   });
