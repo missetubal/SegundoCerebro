@@ -8,6 +8,13 @@
       "when": 1791976688918,
       "tag": "0000_empty_hannibal_king",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792063895949,
+      "tag": "0001_email_password_auth",
+      "breakpoints": true
     }
   ]
 }
