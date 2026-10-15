@@ -1,3 +1,4 @@
+import 'server-only';
 import { type SQL, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { db } from '@/db';
