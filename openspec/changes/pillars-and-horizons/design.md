@@ -56,15 +56,16 @@ with claimed as (
 )
 insert into horizon (id, user_id, name, sort_order)
 select gen_random_uuid()::text, claimed.user_id, d.name, d.sort_order
-from claimed cross join (values ('Curto',1),('Médio',2),('Longo',3),('Contínuo',4)) d(name, sort_order);
+from claimed cross join (values ('Curto',1),('Médio',2),('Longo',3),('Contínuo',4)) d(name, sort_order)
+on conflict do nothing;
 ```
 
-Só quem vence o `update` insere; é um statement, logo atômico. Excluir tudo depois não recria.
+Só quem vence o `update` insere; é um statement, logo atômico. Excluir tudo depois não recria. `createHorizon` também roda o seed antes de inserir, e `on conflict do nothing` pula um padrão cujo nome já exista, para o seed nunca falhar e deixar `horizons_seeded_at` nulo.
 - Alternativas: seed no evento `createUser` (não cobre usuários existentes) e seed quando a tabela está vazia (recriaria após o usuário apagar tudo).
 
 ### 5. Ordem: append e troca em statement único
 - Criar/desarquivar: `sort_order = coalesce((select max(sort_order) from pillar where user_id = $1 and archived_at is null), 0) + 1` dentro do `insert`/`update`. Horizontes: mesmo padrão sem filtro de arquivado.
-- Mover: ler os ids ativos do usuário (ordem `sort_order, created_at, id`), trocar o item com o vizinho em memória (`moveInOrder` em `src/db/ordering.ts`) e renumerar a lista inteira com um único `update ... set sort_order = case id when ... end where user_id = $u and id in (...)`. Renumerar normaliza empates deixados por corridas (uma troca de par com valores iguais não mudaria nada). Sem vizinho → no-op.
+- Mover: um único statement (`moveRow` em `src/db/ordering.ts`) trava a lista do usuário com `select ... for update`, numera pela ordem `sort_order, created_at, id`, troca o item com o vizinho e renumera a lista inteira. O driver `neon-http` não tem transação interativa; o `for update` dentro do statement faz movimentos simultâneos esperarem um pelo outro e partirem da ordem já gravada, sem perder nenhum. Renumerar também normaliza empates. Sem vizinho → no-op.
 - Alternativa: lexorank/fracionário. Rejeitada: complexidade desnecessária para dezenas de itens.
 
 ### 6. Camada de dados
@@ -93,7 +94,7 @@ Só quem vence o `update` insere; é um statement, logo atômico. Excluir tudo d
 
 ## Risks / Trade-offs
 
-- [Corrida em reordenação gera empate de `sort_order`] → desempate por `created_at, id`; a próxima movimentação renumera a lista. Aceitável para uso individual.
+- [Corrida entre criar/desarquivar e mover pode gerar empate de `sort_order`] → desempate por `created_at, id`; a próxima movimentação renumera a lista. Movimentos simultâneos entre si são serializados pelo `for update`.
 - [`lower(name)` não normaliza acentos] → aceitável; spec declara que acentos diferenciam.
 - [Seed depende da linha em `user_preference`] → `listHorizons` chama `getPreferences` (get-or-create idempotente) antes.
 - [Chave de cor/ícone removida do conjunto no futuro] → renderização cai no padrão neutro; validação só rejeita na escrita.
@@ -102,7 +103,7 @@ Só quem vence o `update` insere; é um statement, logo atômico. Excluir tudo d
 
 ## Migration Plan
 
-1. Alterar `src/db/schema.ts`, `npm run db:generate` (migração `0001_*`), revisar SQL (índices funcionais `lower(name)`).
+1. Alterar `src/db/schema.ts`, `npm run db:generate` (migração `0003_pillars_and_horizons`, renumerada após `main` receber as migrações de autenticação; escrita de forma idempotente porque alguns bancos já a aplicaram como `0001_pillars_and_horizons`), revisar SQL (índices funcionais `lower(name)`).
 2. `npm run db:migrate:test` e rodar testes.
 3. `npm run db:migrate` no banco real antes do deploy. Migração aditiva (tabelas novas + coluna nullable); código anterior segue funcionando.
 4. Rollback: reverter o código; tabelas e coluna novas são inofensivas para a versão anterior.
