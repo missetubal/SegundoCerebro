@@ -12,6 +12,9 @@ export function createUserFixtures() {
       createdIds.push(id);
       return id;
     },
+    track(id: string): void {
+      createdIds.push(id);
+    },
     async cleanup(): Promise<void> {
       if (createdIds.length === 0) return;
       await db.delete(users).where(inArray(users.id, createdIds));

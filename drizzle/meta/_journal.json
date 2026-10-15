@@ -12,8 +12,22 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1792005461297,
-      "tag": "0001_pillars_and_horizons",
+      "when": 1792063895949,
+      "tag": "0001_email_password_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792065000000,
+      "tag": "0002_email_unique_and_rate_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792077591938,
+      "tag": "0003_pillars_and_horizons",
       "breakpoints": true
     }
   ]

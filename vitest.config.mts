@@ -28,5 +28,6 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     env: testEnv,
+    server: { deps: { inline: ['next-auth'] } },
   },
 });
