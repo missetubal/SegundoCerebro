@@ -1,10 +1,11 @@
-import { eq, inArray } from 'drizzle-orm';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { eq, inArray, like } from 'drizzle-orm';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { signIn } from '@/auth';
 import { db } from '@/db';
 import { createPasswordUser } from '@/db/credentials';
-import { userPasswords, users } from '@/db/schema';
+import { rateLimits, userPasswords, users } from '@/db/schema';
 import { verifyPassword } from '@/lib/password';
+import { SIGNUP_IP_MAX } from '@/lib/rate-limit-policies';
 import { createUserFixtures } from '@/test/fixtures';
 import { signUpAction } from './actions';
 
@@ -13,6 +14,17 @@ vi.mock('@/auth', () => ({
     throw new Error('NEXT_REDIRECT:/app');
   }),
 }));
+
+const runId = crypto.randomUUID();
+let currentIp = '';
+
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers({ 'x-forwarded-for': currentIp }),
+}));
+
+beforeEach(() => {
+  currentIp = `ip-${runId}-${crypto.randomUUID()}`;
+});
 
 const PASSWORD = 'correct horse battery';
 const EMAIL_UNAVAILABLE =
@@ -25,6 +37,7 @@ afterAll(async () => {
   if (emails.length > 0) {
     await db.delete(users).where(inArray(users.email, emails));
   }
+  await db.delete(rateLimits).where(like(rateLimits.key, `%${runId}%`));
 });
 
 function uniqueEmail() {
@@ -108,6 +121,27 @@ describe('signUpAction', () => {
       status: 'error',
       message: 'A senha precisa ter pelo menos 8 caracteres.',
       fields: { name: 'Ana', email },
+    });
+    expect(await findUser(email)).toBeUndefined();
+  });
+
+  it(`refuses sign-ups from an IP after ${SIGNUP_IP_MAX} attempts and writes nothing`, async () => {
+    for (let i = 0; i < SIGNUP_IP_MAX; i++) {
+      await signUpAction(
+        { status: 'idle' },
+        signUpForm({ name: 'Ana', email: uniqueEmail(), password: PASSWORD }),
+      ).catch(() => undefined);
+    }
+    const email = uniqueEmail();
+
+    const state = await signUpAction(
+      { status: 'idle' },
+      signUpForm({ name: 'Ana', email, password: PASSWORD }),
+    );
+
+    expect(state).toMatchObject({
+      status: 'error',
+      message: 'Muitas tentativas seguidas. Tente de novo em alguns minutos.',
     });
     expect(await findUser(email)).toBeUndefined();
   });

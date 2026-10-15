@@ -1,9 +1,13 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { AuthError } from 'next-auth';
 import { signIn } from '@/auth';
 import { createPasswordUser } from '@/db/credentials';
+import { consumeRateLimits } from '@/db/rate-limits';
+import { clientIp } from '@/lib/client-ip';
 import { hashPassword } from '@/lib/password';
+import { signUpIpLimit } from '@/lib/rate-limit-policies';
 import { signUpSchema } from '@/lib/validation/credentials';
 
 export type SignUpState =
@@ -18,6 +22,8 @@ export type SignUpState =
 // an existing address signs in.
 const EMAIL_UNAVAILABLE =
   'Não foi possível criar a conta com este e-mail. Se ele já é seu, entre com e-mail e senha ou com Google.';
+const TOO_MANY_ATTEMPTS =
+  'Muitas tentativas seguidas. Tente de novo em alguns minutos.';
 
 export async function signUpAction(
   _prevState: SignUpState,
@@ -43,6 +49,10 @@ export async function signUpAction(
   // someone else's address and block Google sign-in for that email until
   // verify-email ships. See PR #4 "Conhecidos".
   try {
+    const ip = clientIp(await headers());
+    if (!(await consumeRateLimits([signUpIpLimit(ip)]))) {
+      return fail(TOO_MANY_ATTEMPTS);
+    }
     const result = await createPasswordUser({
       name: parsed.data.name,
       email: parsed.data.email,
