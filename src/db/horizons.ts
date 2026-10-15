@@ -1,34 +1,16 @@
 import 'server-only';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { isUniqueViolation } from '@/db/errors';
 import { type MoveDirection, moveRow } from '@/db/ordering';
+import { deleteOwned, ownedBy, type WriteResult, writeUnique } from '@/db/owned';
 import { getPreferences } from '@/db/preferences';
 import { horizons, userPreferences } from '@/db/schema';
 
 export type Horizon = typeof horizons.$inferSelect;
 
-export type HorizonWriteResult =
-  | { ok: true; horizon: Horizon }
-  | { ok: false; reason: 'duplicate_name' | 'not_found' };
+export type HorizonWriteResult = WriteResult<Horizon>;
 
 export const DEFAULT_HORIZON_NAMES = ['Curto', 'Médio', 'Longo', 'Contínuo'];
-
-function ownedBy(userId: string, id: string) {
-  return and(eq(horizons.userId, userId), eq(horizons.id, id));
-}
-
-async function writeHorizon(
-  write: () => Promise<Horizon[]>,
-): Promise<HorizonWriteResult> {
-  try {
-    const [horizon] = await write();
-    return horizon ? { ok: true, horizon } : { ok: false, reason: 'not_found' };
-  } catch (error) {
-    if (isUniqueViolation(error)) return { ok: false, reason: 'duplicate_name' };
-    throw error;
-  }
-}
 
 async function seedDefaultHorizons(userId: string): Promise<void> {
   const preferences = await getPreferences(userId);
@@ -85,7 +67,7 @@ export async function createHorizon(
   name: string,
 ): Promise<HorizonWriteResult> {
   await seedDefaultHorizons(userId);
-  return writeHorizon(() =>
+  return writeUnique(() =>
     db
       .insert(horizons)
       .values({
@@ -106,11 +88,11 @@ export function renameHorizon(
   id: string,
   name: string,
 ): Promise<HorizonWriteResult> {
-  return writeHorizon(() =>
+  return writeUnique(() =>
     db
       .update(horizons)
       .set({ name, updatedAt: sql`now()` })
-      .where(ownedBy(userId, id))
+      .where(ownedBy(horizons, userId, id))
       .returning(),
   );
 }
@@ -123,10 +105,6 @@ export function moveHorizon(
   return moveRow(horizons, sql`${horizons.userId} = ${userId}`, id, direction);
 }
 
-export async function deleteHorizon(userId: string, id: string): Promise<boolean> {
-  const rows = await db
-    .delete(horizons)
-    .where(ownedBy(userId, id))
-    .returning({ id: horizons.id });
-  return rows.length > 0;
+export function deleteHorizon(userId: string, id: string): Promise<boolean> {
+  return deleteOwned(horizons, userId, id);
 }

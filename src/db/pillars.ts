@@ -1,20 +1,14 @@
 import 'server-only';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { isUniqueViolation } from '@/db/errors';
 import { type MoveDirection, moveRow } from '@/db/ordering';
+import { deleteOwned, ownedBy, type WriteResult, writeUnique } from '@/db/owned';
 import { pillars } from '@/db/schema';
 import type { PillarInput } from '@/lib/validation/pillar';
 
 export type Pillar = typeof pillars.$inferSelect;
 
-export type PillarWriteResult =
-  | { ok: true; pillar: Pillar }
-  | { ok: false; reason: 'duplicate_name' | 'not_found' };
-
-function ownedBy(userId: string, id: string) {
-  return and(eq(pillars.userId, userId), eq(pillars.id, id));
-}
+export type PillarWriteResult = WriteResult<Pillar>;
 
 function nextActiveSortOrder(userId: string) {
   return sql<number>`(
@@ -22,18 +16,6 @@ function nextActiveSortOrder(userId: string) {
     from ${pillars}
     where ${pillars.userId} = ${userId} and ${pillars.archivedAt} is null
   )`;
-}
-
-async function writePillar(
-  write: () => Promise<Pillar[]>,
-): Promise<PillarWriteResult> {
-  try {
-    const [pillar] = await write();
-    return pillar ? { ok: true, pillar } : { ok: false, reason: 'not_found' };
-  } catch (error) {
-    if (isUniqueViolation(error)) return { ok: false, reason: 'duplicate_name' };
-    throw error;
-  }
 }
 
 export async function listPillars(
@@ -61,7 +43,7 @@ export async function getPillar(
   userId: string,
   id: string,
 ): Promise<Pillar | null> {
-  const [pillar] = await db.select().from(pillars).where(ownedBy(userId, id));
+  const [pillar] = await db.select().from(pillars).where(ownedBy(pillars, userId, id));
   return pillar ?? null;
 }
 
@@ -69,7 +51,7 @@ export function createPillar(
   userId: string,
   input: PillarInput,
 ): Promise<PillarWriteResult> {
-  return writePillar(() =>
+  return writeUnique(() =>
     db
       .insert(pillars)
       .values({ ...input, userId, sortOrder: nextActiveSortOrder(userId) })
@@ -82,11 +64,11 @@ export function updatePillar(
   id: string,
   input: PillarInput,
 ): Promise<PillarWriteResult> {
-  return writePillar(() =>
+  return writeUnique(() =>
     db
       .update(pillars)
       .set({ ...input, updatedAt: sql`now()` })
-      .where(ownedBy(userId, id))
+      .where(ownedBy(pillars, userId, id))
       .returning(),
   );
 }
@@ -111,7 +93,7 @@ export async function archivePillar(userId: string, id: string): Promise<boolean
       archivedAt: sql`coalesce(${pillars.archivedAt}, now())`,
       updatedAt: sql`now()`,
     })
-    .where(ownedBy(userId, id))
+    .where(ownedBy(pillars, userId, id))
     .returning({ id: pillars.id });
   return rows.length > 0;
 }
@@ -127,15 +109,11 @@ export async function unarchivePillar(
       archivedAt: null,
       updatedAt: sql`now()`,
     })
-    .where(ownedBy(userId, id))
+    .where(ownedBy(pillars, userId, id))
     .returning({ id: pillars.id });
   return rows.length > 0;
 }
 
-export async function deletePillar(userId: string, id: string): Promise<boolean> {
-  const rows = await db
-    .delete(pillars)
-    .where(ownedBy(userId, id))
-    .returning({ id: pillars.id });
-  return rows.length > 0;
+export function deletePillar(userId: string, id: string): Promise<boolean> {
+  return deleteOwned(pillars, userId, id);
 }
