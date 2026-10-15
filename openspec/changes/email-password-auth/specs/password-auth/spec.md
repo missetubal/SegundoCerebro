@@ -51,19 +51,35 @@ O sistema SHALL autenticar o usuário que informar o e-mail (sem diferenciar mai
 - **THEN** o login é recusado com a mesma mensagem genérica
 
 ### Requirement: Limite de tentativas de senha
-O sistema MUST recusar tentativas de login com senha para um e-mail que acumulou 5 tentativas com senha incorreta nos últimos 15 minutos, mesmo que a nova senha esteja correta, até que a janela de 15 minutos deixe de conter 5 falhas. A recusa MUST usar uma mensagem neutra pedindo para tentar mais tarde. O limite MUST afetar apenas o login com senha daquele e-mail; o login com Google MUST continuar funcionando.
+O sistema MUST recusar tentativas de login com senha para um e-mail vindas de um IP que acumulou 5 tentativas com senha incorreta para esse e-mail nos últimos 15 minutos, mesmo que a nova senha esteja correta, até que a janela de 15 minutos deixe de conter 5 falhas. O sistema MUST também recusar tentativas de login com senha de um IP que fez 30 tentativas nos últimos 15 minutos, para qualquer e-mail. Falhas vindas de outro IP MUST não bloquear o dono da conta. A recusa MUST usar uma mensagem neutra pedindo para tentar mais tarde. O limite MUST afetar apenas o login com senha; o login com Google MUST continuar funcionando.
 
 #### Scenario: Bloqueio após falhas
-- **WHEN** ocorrem 5 tentativas com senha errada para "ana@exemplo.com" em 10 minutos e, em seguida, uma tentativa com a senha correta
+- **WHEN** ocorrem 5 tentativas com senha errada para "ana@exemplo.com" a partir do mesmo IP em 10 minutos e, em seguida, uma tentativa com a senha correta desse IP
 - **THEN** a sexta tentativa é recusada com a mensagem para tentar mais tarde
 
+#### Scenario: Falhas de outro IP não bloqueiam a dona da conta
+- **WHEN** alguém erra 5 vezes a senha de "ana@exemplo.com" a partir de outro IP
+- **THEN** a usuária de "ana@exemplo.com" entra normalmente a partir do seu IP
+
 #### Scenario: Outros e-mails não são afetados
-- **WHEN** "ana@exemplo.com" está bloqueado e a usuária de "bia@exemplo.com" entra com a senha correta
+- **WHEN** "ana@exemplo.com" está bloqueado para um IP e a usuária de "bia@exemplo.com" entra com a senha correta a partir do mesmo IP
 - **THEN** o login de "bia@exemplo.com" funciona normalmente
+
+#### Scenario: Muitas tentativas de um IP
+- **WHEN** um IP fez 30 tentativas de login com senha em 15 minutos, com e-mails diferentes
+- **THEN** a próxima tentativa desse IP é recusada com a mensagem para tentar mais tarde
 
 #### Scenario: Janela expirada
 - **WHEN** as 5 falhas de "ana@exemplo.com" têm mais de 15 minutos
 - **THEN** o login com a senha correta funciona
+
+### Requirement: Limite de cadastros
+O sistema MUST recusar cadastros de um IP que fez 5 tentativas de cadastro com dados válidos na última hora, com a mensagem neutra pedindo para tentar mais tarde, sem criar conta.
+
+#### Scenario: Muitos cadastros de um IP
+- **WHEN** um IP já fez 5 cadastros na última hora e tenta mais um
+- **THEN** nenhuma conta é criada
+- **AND** o sistema pede para tentar mais tarde
 
 ### Requirement: Armazenamento seguro da senha
 O sistema MUST guardar a senha apenas como hash gerado por função de derivação lenta com salt aleatório por senha. A senha em texto puro MUST não ser gravada no banco, em logs ou em mensagens de erro, e o hash MUST não ser enviado ao navegador nem incluído na sessão.

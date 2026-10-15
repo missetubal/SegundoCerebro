@@ -79,14 +79,20 @@ export const userPasswords = pgTable('user_password', {
     .defaultNow(),
 });
 
-/** One row per email: atomic upsert increments failure_count within the window. */
-export const loginFailures = pgTable('login_failure', {
-  email: text('email').primaryKey(),
-  failureCount: integer('failure_count').notNull().default(0),
-  windowStartedAt: timestamp('window_started_at', { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+/** One row per limited key (e.g. `login:ip:1.2.3.4`); atomic upsert increments count within the window. */
+export const rateLimits = pgTable(
+  'rate_limit',
+  {
+    key: text('key').primaryKey(),
+    count: integer('count').notNull().default(0),
+    windowStartedAt: timestamp('window_started_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (rateLimit) => [
+    index('rate_limit_window_started_at_idx').on(rateLimit.windowStartedAt),
+  ],
+);
 
 export const userPreferences = pgTable('user_preference', {
   userId: text('user_id')

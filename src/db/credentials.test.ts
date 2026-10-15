@@ -1,30 +1,18 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import { db } from '@/db';
-import { loginFailures, userPasswords, users } from '@/db/schema';
+import { userPasswords, users } from '@/db/schema';
 import { createUserFixtures } from '@/test/fixtures';
-import {
-  clearLoginFailures,
-  countRecentLoginFailures,
-  createPasswordUser,
-  findPasswordUserByEmail,
-  recordLoginFailure,
-} from './credentials';
+import { createPasswordUser, findPasswordUserByEmail } from './credentials';
 
 const fixtures = createUserFixtures();
-const failureEmails: string[] = [];
 
 afterAll(async () => {
   await fixtures.cleanup();
-  if (failureEmails.length > 0) {
-    await db.delete(loginFailures).where(inArray(loginFailures.email, failureEmails));
-  }
 });
 
 function uniqueEmail() {
-  const email = `test-${crypto.randomUUID()}@test.local`;
-  failureEmails.push(email);
-  return email;
+  return `test-${crypto.randomUUID()}@test.local`;
 }
 
 async function createTrackedPasswordUser(email: string, passwordHash = 'hash-a') {
@@ -53,7 +41,6 @@ describe('createPasswordUser', () => {
   it('stores the email in lowercase', async () => {
     const local = `Test-${crypto.randomUUID()}`;
     const email = `${local}@test.local`;
-    failureEmails.push(email.toLowerCase());
 
     const result = await createTrackedPasswordUser(email.toUpperCase());
 
@@ -117,49 +104,5 @@ describe('findPasswordUserByEmail', () => {
 
   it('returns null for an unknown email', async () => {
     await expect(findPasswordUserByEmail(uniqueEmail())).resolves.toBeNull();
-  });
-});
-
-describe('login failures', () => {
-  it('counts failures inside the window for that email only', async () => {
-    const email = uniqueEmail();
-    const other = uniqueEmail();
-
-    await recordLoginFailure(email);
-    await recordLoginFailure(email);
-    await recordLoginFailure(other);
-
-    expect(await countRecentLoginFailures(email)).toBe(2);
-    expect(await countRecentLoginFailures(other)).toBe(1);
-  });
-
-  it('increments atomically and returns the new count', async () => {
-    const email = uniqueEmail();
-
-    await expect(recordLoginFailure(email)).resolves.toBe(1);
-    await expect(recordLoginFailure(email)).resolves.toBe(2);
-    await expect(recordLoginFailure(email)).resolves.toBe(3);
-  });
-
-  it('ignores failures older than the window', async () => {
-    const email = uniqueEmail();
-    await db.insert(loginFailures).values({
-      email,
-      failureCount: 5,
-      windowStartedAt: new Date(Date.now() - 16 * 60 * 1000),
-    });
-
-    expect(await countRecentLoginFailures(email)).toBe(0);
-    await expect(recordLoginFailure(email)).resolves.toBe(1);
-  });
-
-  it('clears failures for that email', async () => {
-    const email = uniqueEmail();
-    await recordLoginFailure(email);
-    await recordLoginFailure(email);
-
-    await clearLoginFailures(email);
-
-    expect(await countRecentLoginFailures(email)).toBe(0);
   });
 });

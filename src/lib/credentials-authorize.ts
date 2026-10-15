@@ -1,14 +1,11 @@
 import 'server-only';
 import { CredentialsSignin } from 'next-auth';
-import {
-  clearLoginFailures,
-  findPasswordUserByEmail,
-  recordLoginFailure,
-} from '@/db/credentials';
+import { findPasswordUserByEmail } from '@/db/credentials';
+import { consumeRateLimits, resetRateLimit } from '@/db/rate-limits';
+import { clientIp } from '@/lib/client-ip';
 import { hashPassword, verifyPassword } from '@/lib/password';
+import { loginAccountLimit, loginIpLimit } from '@/lib/rate-limit-policies';
 import { signInSchema } from '@/lib/validation/credentials';
-
-export const MAX_LOGIN_FAILURES = 5;
 
 export class RateLimitedSignin extends CredentialsSignin {
   code = 'rate_limited';
@@ -30,15 +27,18 @@ function getDummyHash(): Promise<string> {
 
 export async function authorizeCredentials(
   credentials: Partial<Record<string, unknown>>,
+  request?: Request,
 ): Promise<AuthorizedUser | null> {
   const parsed = signInSchema.safeParse(credentials);
   if (!parsed.success) return null;
   const { email, password } = parsed.data;
+  const ip = clientIp(request?.headers ?? new Headers());
+  const accountLimit = loginAccountLimit(email, ip);
 
   // Reserve a slot first (atomic upsert). Parallel attempts serialize on the row lock.
   // Fail-closed when the window already exceeds the max.
-  const failures = await recordLoginFailure(email);
-  if (failures > MAX_LOGIN_FAILURES) {
+  const allowed = await consumeRateLimits([accountLimit, loginIpLimit(ip)]);
+  if (!allowed) {
     throw new RateLimitedSignin();
   }
 
@@ -52,6 +52,6 @@ export async function authorizeCredentials(
     return null;
   }
 
-  await clearLoginFailures(email);
+  await resetRateLimit(accountLimit.key);
   return { id: user.id, name: user.name, email: user.email, image: user.image };
 }
