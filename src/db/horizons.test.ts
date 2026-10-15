@@ -48,6 +48,13 @@ describe('listHorizons', () => {
 
     expect(await listHorizons(userId)).toEqual([]);
   });
+
+  it('still seeds when a default name already exists', async () => {
+    const userId = await fixtures.createUser();
+    await db.insert(horizons).values({ userId, name: 'curto', sortOrder: 1 });
+
+    expect(await names(userId)).toEqual(['curto', 'Médio', 'Longo', 'Contínuo']);
+  });
 });
 
 describe('createHorizon', () => {
@@ -64,6 +71,23 @@ describe('createHorizon', () => {
       'Longo',
       'Contínuo',
       'Este trimestre',
+    ]);
+  });
+
+  it('seeds the defaults first when called before any listing', async () => {
+    const userId = await fixtures.createUser();
+
+    expect(await createHorizon(userId, 'Curto')).toEqual({
+      ok: false,
+      reason: 'duplicate_name',
+    });
+    expect((await createHorizon(userId, 'Este ano')).ok).toBe(true);
+    expect(await names(userId)).toEqual([
+      'Curto',
+      'Médio',
+      'Longo',
+      'Contínuo',
+      'Este ano',
     ]);
   });
 
@@ -111,6 +135,19 @@ describe('moveHorizon', () => {
     const medio = await horizonNamed(userId, 'Médio');
     expect(await moveHorizon(userId, medio.id, 'up')).toBe(true);
     expect(await names(userId)).toEqual(['Médio', 'Curto', 'Longo', 'Contínuo']);
+  });
+
+  it('applies concurrent moves without losing any', async () => {
+    const userId = await fixtures.createUser();
+    const curto = await horizonNamed(userId, 'Curto');
+    const continuo = await horizonNamed(userId, 'Contínuo');
+
+    await Promise.all([
+      moveHorizon(userId, curto.id, 'down'),
+      moveHorizon(userId, continuo.id, 'up'),
+    ]);
+
+    expect(await names(userId)).toEqual(['Médio', 'Curto', 'Contínuo', 'Longo']);
   });
 });
 

@@ -1,8 +1,8 @@
 import 'server-only';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { isUniqueViolation } from '@/db/errors';
-import { type MoveDirection, moveInOrder, sortOrderCase } from '@/db/ordering';
+import { type MoveDirection, moveRow } from '@/db/ordering';
 import { getPreferences } from '@/db/preferences';
 import { horizons } from '@/db/schema';
 
@@ -50,6 +50,7 @@ async function seedDefaultHorizons(userId: string): Promise<void> {
     insert into horizon (id, user_id, name, sort_order)
     select gen_random_uuid()::text, claimed.user_id, d.name, d.sort_order
     from claimed cross join (values ${defaults}) as d(name, sort_order)
+    on conflict do nothing
   `);
 }
 
@@ -66,10 +67,11 @@ export async function listHorizons(userId: string): Promise<Horizon[]> {
   return selectHorizons(userId);
 }
 
-export function createHorizon(
+export async function createHorizon(
   userId: string,
   name: string,
 ): Promise<HorizonWriteResult> {
+  await seedDefaultHorizons(userId);
   return writeHorizon(() =>
     db
       .insert(horizons)
@@ -100,22 +102,12 @@ export function renameHorizon(
   );
 }
 
-export async function moveHorizon(
+export function moveHorizon(
   userId: string,
   id: string,
   direction: MoveDirection,
 ): Promise<boolean> {
-  const ids = (await selectHorizons(userId)).map((horizon) => horizon.id);
-  if (!ids.includes(id)) return false;
-
-  const reordered = moveInOrder(ids, id, direction);
-  if (!reordered) return true;
-
-  await db
-    .update(horizons)
-    .set({ sortOrder: sortOrderCase(horizons.id, reordered), updatedAt: sql`now()` })
-    .where(and(eq(horizons.userId, userId), inArray(horizons.id, reordered)));
-  return true;
+  return moveRow(horizons, sql`${horizons.userId} = ${userId}`, id, direction);
 }
 
 export async function deleteHorizon(userId: string, id: string): Promise<boolean> {
