@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { horizons } from '@/db/schema';
 import { createUserFixtures } from '@/test/fixtures';
@@ -54,6 +54,20 @@ describe('listHorizons', () => {
     await db.insert(horizons).values({ userId, name: 'curto', sortOrder: 1 });
 
     expect(await names(userId)).toEqual(['curto', 'Médio', 'Longo', 'Contínuo']);
+  });
+
+  it('does not write once the defaults were seeded', async () => {
+    const userId = await fixtures.createUser();
+    await listHorizons(userId);
+    const insert = vi.spyOn(db, 'insert');
+    const execute = vi.spyOn(db, 'execute');
+
+    await listHorizons(userId);
+
+    expect(insert).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+    insert.mockRestore();
+    execute.mockRestore();
   });
 });
 

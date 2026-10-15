@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { userPreferences } from '@/db/schema';
 import { createUserFixtures } from '@/test/fixtures';
@@ -33,6 +33,17 @@ describe('getPreferences', () => {
     ]);
 
     expect(await countRows(userId)).toBe(1);
+  });
+
+  it('does not write when preferences already exist', async () => {
+    const userId = await fixtures.createUser();
+    await getPreferences(userId);
+    const insert = vi.spyOn(db, 'insert');
+
+    await getPreferences(userId);
+
+    expect(insert).not.toHaveBeenCalled();
+    insert.mockRestore();
   });
 });
 

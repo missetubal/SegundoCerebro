@@ -31,7 +31,8 @@ async function writeHorizon(
 }
 
 async function seedDefaultHorizons(userId: string): Promise<void> {
-  await getPreferences(userId);
+  const preferences = await getPreferences(userId);
+  if (preferences.horizonsSeededAt) return;
 
   const defaults = sql.join(
     DEFAULT_HORIZON_NAMES.map(
@@ -69,6 +70,12 @@ function selectHorizons(userId: string) {
 }
 
 export async function listHorizons(userId: string): Promise<Horizon[]> {
+  const [preferences, existing] = await Promise.all([
+    getPreferences(userId),
+    selectHorizons(userId),
+  ]);
+  if (preferences.horizonsSeededAt) return existing;
+
   await seedDefaultHorizons(userId);
   return selectHorizons(userId);
 }
