@@ -1,6 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
+import { primaryButton, textInput } from '@/components/ui';
+import { NAME_MAX, PASSWORD_MAX, PASSWORD_MIN } from '@/lib/validation/credentials';
 import { signUpAction, type SignUpState } from './actions';
 
 const initialState: SignUpState = { status: 'idle' };
@@ -20,9 +22,9 @@ export function SignUpForm() {
           name='name'
           autoComplete='name'
           required
-          maxLength={80}
+          maxLength={NAME_MAX}
           defaultValue={fields?.name}
-          className='rounded border px-3 py-2'
+          className={textInput}
         />
       </div>
       <div className='flex flex-col gap-2'>
@@ -36,7 +38,7 @@ export function SignUpForm() {
           autoComplete='email'
           required
           defaultValue={fields?.email}
-          className='rounded border px-3 py-2'
+          className={textInput}
         />
       </div>
       <div className='flex flex-col gap-2'>
@@ -49,23 +51,19 @@ export function SignUpForm() {
           type='password'
           autoComplete='new-password'
           required
-          minLength={8}
-          maxLength={128}
+          minLength={PASSWORD_MIN}
+          maxLength={PASSWORD_MAX}
           aria-describedby='password-hint'
-          className='rounded border px-3 py-2'
+          className={textInput}
         />
-        <span id='password-hint' className='text-sm opacity-70'>
-          De 8 a 128 caracteres.
+        <span id='password-hint' className='text-sm text-zinc-600 dark:text-zinc-400'>
+          De {PASSWORD_MIN} a {PASSWORD_MAX} caracteres.
         </span>
       </div>
-      <button
-        type='submit'
-        disabled={pending}
-        className='rounded bg-black px-4 py-2 text-white disabled:opacity-50'
-      >
+      <button type='submit' disabled={pending} className={primaryButton}>
         {pending ? 'Criando conta…' : 'Criar conta'}
       </button>
-      <p aria-live='polite' className='text-sm'>
+      <p aria-live='polite' className='text-sm text-rose-700 dark:text-rose-300'>
         {state.status === 'error' && state.message}
       </p>
     </form>
