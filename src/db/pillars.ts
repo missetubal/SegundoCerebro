@@ -1,8 +1,8 @@
 import 'server-only';
-import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { isUniqueViolation } from '@/db/errors';
-import { type MoveDirection, moveInOrder, sortOrderCase } from '@/db/ordering';
+import { type MoveDirection, moveRow } from '@/db/ordering';
 import { pillars } from '@/db/schema';
 import type { PillarInput } from '@/lib/validation/pillar';
 
@@ -91,31 +91,17 @@ export function updatePillar(
   );
 }
 
-export async function movePillar(
+export function movePillar(
   userId: string,
   id: string,
   direction: MoveDirection,
 ): Promise<boolean> {
-  const active = await db
-    .select({ id: pillars.id })
-    .from(pillars)
-    .where(and(eq(pillars.userId, userId), isNull(pillars.archivedAt)))
-    .orderBy(
-      asc(pillars.sortOrder),
-      asc(pillars.createdAt),
-      asc(pillars.id),
-    );
-  const ids = active.map((pillar) => pillar.id);
-  if (!ids.includes(id)) return false;
-
-  const reordered = moveInOrder(ids, id, direction);
-  if (!reordered) return true;
-
-  await db
-    .update(pillars)
-    .set({ sortOrder: sortOrderCase(pillars.id, reordered), updatedAt: sql`now()` })
-    .where(and(eq(pillars.userId, userId), inArray(pillars.id, reordered)));
-  return true;
+  return moveRow(
+    pillars,
+    sql`${pillars.userId} = ${userId} and ${pillars.archivedAt} is null`,
+    id,
+    direction,
+  );
 }
 
 export async function archivePillar(userId: string, id: string): Promise<boolean> {

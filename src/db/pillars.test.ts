@@ -150,6 +150,21 @@ describe('movePillar', () => {
     expect(await movePillar(userId, saude.id, 'down')).toBe(true);
     expect(await activeNames(userId)).toEqual(['Carreira', 'Saúde']);
   });
+
+  it('applies concurrent moves without losing any', async () => {
+    const userId = await fixtures.createUser();
+    const carreira = await create(userId, 'Carreira');
+    await create(userId, 'Saúde');
+    await create(userId, 'Lazer');
+    const familia = await create(userId, 'Família');
+
+    await Promise.all([
+      movePillar(userId, carreira.id, 'down'),
+      movePillar(userId, familia.id, 'up'),
+    ]);
+
+    expect(await activeNames(userId)).toEqual(['Saúde', 'Carreira', 'Família', 'Lazer']);
+  });
 });
 
 describe('archivePillar and unarchivePillar', () => {
