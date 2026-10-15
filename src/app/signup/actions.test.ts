@@ -15,6 +15,8 @@ vi.mock('@/auth', () => ({
 }));
 
 const PASSWORD = 'correct horse battery';
+const EMAIL_UNAVAILABLE =
+  'Não foi possível criar a conta com este e-mail. Se ele já é seu, entre com e-mail e senha ou com Google.';
 const fixtures = createUserFixtures();
 const emails: string[] = [];
 
@@ -77,10 +79,7 @@ describe('signUpAction', () => {
       signUpForm({ name: 'Outra', email: email.toUpperCase(), password: PASSWORD }),
     );
 
-    expect(state).toMatchObject({
-      status: 'error',
-      message: 'Já existe uma conta com este e-mail. Entre com e-mail e senha.',
-    });
+    expect(state).toMatchObject({ status: 'error', message: EMAIL_UNAVAILABLE });
     expect(await findUser(email)).toMatchObject({ name: 'Ana', hash: 'hash-a' });
   });
 
@@ -93,10 +92,7 @@ describe('signUpAction', () => {
       signUpForm({ name: 'Bia', email, password: PASSWORD }),
     );
 
-    expect(state).toMatchObject({
-      status: 'error',
-      message: 'Este e-mail já é usado por uma conta Google. Entre com Google.',
-    });
+    expect(state).toMatchObject({ status: 'error', message: EMAIL_UNAVAILABLE });
     expect(await findUser(email)).toMatchObject({ id: userId, name: null, hash: null });
   });
 

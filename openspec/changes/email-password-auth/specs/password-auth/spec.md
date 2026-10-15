@@ -23,17 +23,17 @@ O sistema SHALL permitir criar uma conta informando nome, e-mail e senha. O nome
 - **AND** o sistema pede um e-mail válido
 
 ### Requirement: Cadastro com e-mail já existente
-O sistema MUST impedir o cadastro com um e-mail que já pertence a outra conta, comparando sem diferenciar maiúsculas de minúsculas. Se a conta existente usa senha, o sistema MUST orientar a entrar com e-mail e senha. Se a conta existente só usa Google, o sistema MUST orientar a entrar com Google. Nenhum dado da conta existente MUST ser alterado.
+O sistema MUST impedir o cadastro com um e-mail que já pertence a outra conta, comparando sem diferenciar maiúsculas de minúsculas. A recusa MUST usar a mesma mensagem para contas com senha e contas Google, orientando a entrar com e-mail e senha ou com Google, sem revelar qual método a conta existente usa. Nenhum dado da conta existente MUST ser alterado.
 
 #### Scenario: E-mail de conta com senha
 - **WHEN** já existe uma conta com senha para "ana@exemplo.com" e um visitante tenta se cadastrar com "ANA@exemplo.com"
 - **THEN** nenhuma conta é criada
-- **AND** o sistema orienta a entrar com e-mail e senha
+- **AND** o sistema orienta a entrar com e-mail e senha ou com Google
 
 #### Scenario: E-mail de conta Google
 - **WHEN** já existe uma conta Google para "bia@exemplo.com" e um visitante tenta se cadastrar com esse e-mail
 - **THEN** nenhuma conta é criada nem recebe senha
-- **AND** o sistema orienta a entrar com Google
+- **AND** o sistema mostra a mesma mensagem do cenário de conta com senha
 
 ### Requirement: Login com e-mail e senha
 O sistema SHALL autenticar o usuário que informar o e-mail (sem diferenciar maiúsculas de minúsculas) e a senha corretos de uma conta com senha, levando-o para a área logada. Quando o e-mail não existe, a conta não tem senha ou a senha está errada, o sistema MUST exibir a mesma mensagem genérica, sem indicar qual dado está incorreto.
