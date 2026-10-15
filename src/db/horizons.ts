@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { isUniqueViolation } from '@/db/errors';
 import { type MoveDirection, moveRow } from '@/db/ordering';
 import { getPreferences } from '@/db/preferences';
-import { horizons } from '@/db/schema';
+import { horizons, userPreferences } from '@/db/schema';
 
 export type Horizon = typeof horizons.$inferSelect;
 
@@ -42,12 +42,18 @@ async function seedDefaultHorizons(userId: string): Promise<void> {
 
   await db.execute(sql`
     with claimed as (
-      update user_preference
-      set horizons_seeded_at = now()
-      where user_id = ${userId} and horizons_seeded_at is null
-      returning user_id
+      update ${userPreferences}
+      set ${sql.identifier(userPreferences.horizonsSeededAt.name)} = now()
+      where ${userPreferences.userId} = ${userId}
+        and ${userPreferences.horizonsSeededAt} is null
+      returning ${userPreferences.userId} as user_id
     )
-    insert into horizon (id, user_id, name, sort_order)
+    insert into ${horizons} (
+      ${sql.identifier(horizons.id.name)},
+      ${sql.identifier(horizons.userId.name)},
+      ${sql.identifier(horizons.name.name)},
+      ${sql.identifier(horizons.sortOrder.name)}
+    )
     select gen_random_uuid()::text, claimed.user_id, d.name, d.sort_order
     from claimed cross join (values ${defaults}) as d(name, sort_order)
     on conflict do nothing
