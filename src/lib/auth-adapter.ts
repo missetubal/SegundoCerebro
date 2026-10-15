@@ -3,10 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import type { Adapter, AdapterUser } from 'next-auth/adapters';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
+import { normalizeEmail } from '@/lib/email';
 
 /** Store and look up emails in lowercase so Google + Credentials share one identity. */
 export function withNormalizedEmails(adapter: Adapter): Adapter {

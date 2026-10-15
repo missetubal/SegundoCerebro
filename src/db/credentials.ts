@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { isUniqueViolation } from '@/db/errors';
 import { loginFailures, userPasswords, users } from '@/db/schema';
+import { normalizeEmail } from '@/lib/email';
 
 export const LOGIN_FAILURE_WINDOW_MINUTES = 15;
 
@@ -17,10 +18,6 @@ export type PasswordUser = {
 export type CreatePasswordUserResult =
   | { status: 'created'; userId: string }
   | { status: 'email_taken' };
-
-function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
 
 export async function createPasswordUser(input: {
   name: string;
