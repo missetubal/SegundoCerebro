@@ -6,18 +6,15 @@ import {
   createPillar,
   deletePillar,
   movePillar,
+  type Pillar,
   type PillarWriteResult,
   unarchivePillar,
   updatePillar,
 } from '@/db/pillars';
 import { ACTION_MESSAGES, type ActionState, errorState } from '@/lib/action-state';
-import { runItemAction } from '@/lib/item-action';
+import { runItemAction, runMoveAction, saveItem } from '@/lib/item-action';
 import { requireUserId } from '@/lib/session';
-import {
-  firstIssueMessage,
-  itemIdSchema,
-  moveDirectionSchema,
-} from '@/lib/validation/form';
+import { firstIssueMessage, itemIdSchema } from '@/lib/validation/form';
 import { pillarInputSchema } from '@/lib/validation/pillar';
 
 const DUPLICATE_NAME_MESSAGE =
@@ -32,23 +29,12 @@ function parsePillarInput(formData: FormData) {
   });
 }
 
-async function savePillar(
+function savePillar(
   write: () => Promise<PillarWriteResult>,
 ): Promise<ActionState> {
-  let result: PillarWriteResult;
-  try {
-    result = await write();
-  } catch {
-    return errorState(ACTION_MESSAGES.unavailable);
-  }
-  if (!result.ok) {
-    return errorState(
-      result.reason === 'duplicate_name'
-        ? DUPLICATE_NAME_MESSAGE
-        : ACTION_MESSAGES.notFound,
-    );
-  }
-  redirect(`/app/pillars/${result.pillar.id}`);
+  return saveItem(write, DUPLICATE_NAME_MESSAGE, (pillar: Pillar) =>
+    redirect(`/app/pillars/${pillar.id}`),
+  );
 }
 
 export async function createPillarAction(
@@ -81,12 +67,7 @@ export async function movePillarAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const direction = moveDirectionSchema.safeParse(formData.get('direction'));
-  return runItemAction(formData, (userId, id) =>
-    direction.success
-      ? movePillar(userId, id, direction.data)
-      : Promise.resolve(false),
-  );
+  return runMoveAction(formData, movePillar);
 }
 
 export async function archivePillarAction(

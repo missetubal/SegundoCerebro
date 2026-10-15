@@ -1,6 +1,5 @@
 'use server';
 
-import { refresh } from 'next/cache';
 import {
   createHorizon,
   deleteHorizon,
@@ -8,41 +7,18 @@ import {
   moveHorizon,
   renameHorizon,
 } from '@/db/horizons';
-import {
-  ACTION_MESSAGES,
-  type ActionState,
-  errorState,
-  SUCCESS_STATE,
-} from '@/lib/action-state';
-import { runItemAction } from '@/lib/item-action';
+import { ACTION_MESSAGES, type ActionState, errorState } from '@/lib/action-state';
+import { runItemAction, runMoveAction, saveItem } from '@/lib/item-action';
 import { requireUserId } from '@/lib/session';
-import {
-  firstIssueMessage,
-  itemIdSchema,
-  moveDirectionSchema,
-} from '@/lib/validation/form';
+import { firstIssueMessage, itemIdSchema } from '@/lib/validation/form';
 import { horizonNameSchema } from '@/lib/validation/horizon';
 
 const DUPLICATE_NAME_MESSAGE = 'Já existe um horizonte com esse nome.';
 
-async function saveHorizon(
+function saveHorizon(
   write: () => Promise<HorizonWriteResult>,
 ): Promise<ActionState> {
-  let result: HorizonWriteResult;
-  try {
-    result = await write();
-  } catch {
-    return errorState(ACTION_MESSAGES.unavailable);
-  }
-  if (!result.ok) {
-    return errorState(
-      result.reason === 'duplicate_name'
-        ? DUPLICATE_NAME_MESSAGE
-        : ACTION_MESSAGES.notFound,
-    );
-  }
-  refresh();
-  return SUCCESS_STATE;
+  return saveItem(write, DUPLICATE_NAME_MESSAGE);
 }
 
 export async function createHorizonAction(
@@ -75,12 +51,7 @@ export async function moveHorizonAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const direction = moveDirectionSchema.safeParse(formData.get('direction'));
-  return runItemAction(formData, (userId, id) =>
-    direction.success
-      ? moveHorizon(userId, id, direction.data)
-      : Promise.resolve(false),
-  );
+  return runMoveAction(formData, moveHorizon);
 }
 
 export async function deleteHorizonAction(

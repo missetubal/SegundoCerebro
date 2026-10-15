@@ -42,7 +42,7 @@ async function seedPillar(userId: string, name: string): Promise<Pillar> {
     icon: null,
   });
   if (!result.ok) throw new Error('setup failed');
-  return result.pillar;
+  return result.item;
 }
 
 beforeEach(() => mockedAuth.mockReset());
