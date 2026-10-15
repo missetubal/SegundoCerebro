@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  index,
   integer,
   pgTable,
   primaryKey,
@@ -93,6 +94,7 @@ export const userPreferences = pgTable('user_preference', {
     .references(() => users.id, { onDelete: 'cascade' }),
   timezone: text('timezone').notNull().default('America/Sao_Paulo'),
   journalTemplate: text('journal_template').notNull().default('minimal'),
+  horizonsSeededAt: timestamp('horizons_seeded_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -100,3 +102,61 @@ export const userPreferences = pgTable('user_preference', {
     .notNull()
     .defaultNow(),
 });
+
+export const pillars = pgTable(
+  'pillar',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color'),
+    icon: text('icon'),
+    sortOrder: integer('sort_order').notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (pillar) => [
+    uniqueIndex('pillar_user_name_unique').on(
+      pillar.userId,
+      sql`lower(${pillar.name})`,
+    ),
+    index('pillar_user_sort_idx').on(pillar.userId, pillar.sortOrder),
+  ],
+);
+
+export const horizons = pgTable(
+  'horizon',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    sortOrder: integer('sort_order').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (horizon) => [
+    uniqueIndex('horizon_user_name_unique').on(
+      horizon.userId,
+      sql`lower(${horizon.name})`,
+    ),
+    index('horizon_user_sort_idx').on(horizon.userId, horizon.sortOrder),
+  ],
+);

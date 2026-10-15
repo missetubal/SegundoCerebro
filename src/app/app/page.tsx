@@ -9,10 +9,18 @@ export default function AppHome() {
       <Suspense fallback={<p>Carregando…</p>}>
         <Greeting />
       </Suspense>
-      <p>Em breve: check-in, hábitos e pilares.</p>
-      <Link href='/app/preferences' className='underline'>
-        Preferências
-      </Link>
+      <p>Em breve: check-in, metas e hábitos.</p>
+      <nav className='flex flex-col gap-2'>
+        <Link href='/app/pillars' className='underline'>
+          Pilares
+        </Link>
+        <Link href='/app/horizons' className='underline'>
+          Horizontes
+        </Link>
+        <Link href='/app/preferences' className='underline'>
+          Preferências
+        </Link>
+      </nav>
       <form
         action={async () => {
           'use server';
