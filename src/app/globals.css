@@ -1,26 +1,67 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — docs/design-system.md
+ * Fonte: Figma Segundo Cérebro → Design System → Foundations
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-app: #f4f6f8;
+  --bg-card: #ffffff;
+  --border: #e5e7eb;
+  --ink: #1a1d26;
+  --navy: #1d2535;
+  --muted: #6b7280;
+  --pastel-sky: #ebf7fc;
+  --pastel-mint: #e8f8f0;
+  --pastel-peach: #fff1e6;
+  --pastel-lilac: #f3eeff;
+  --pastel-rose: #ffe8ec;
+
+  /* Compat: aliases usados pelo layout legado */
+  --background: var(--bg-app);
+  --foreground: var(--ink);
 }
 
 @theme inline {
+  --color-bg-app: var(--bg-app);
+  --color-bg-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-muted: var(--muted);
+  --color-pastel-sky: var(--pastel-sky);
+  --color-pastel-mint: var(--pastel-mint);
+  --color-pastel-peach: var(--pastel-peach);
+  --color-pastel-lilac: var(--pastel-lilac);
+  --color-pastel-rose: var(--pastel-rose);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * Foundations do Figma é light-only.
+ * Dark: invert aproximado pra não quebrar `dark:` já existente.
+ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-app: #0f1218;
+    --bg-card: #1a1d26;
+    --border: #2a3140;
+    --ink: #f4f6f8;
+    --navy: #e5e7eb;
+    --muted: #9ca3af;
+    --pastel-sky: #15222a;
+    --pastel-mint: #14241c;
+    --pastel-peach: #2a1f14;
+    --pastel-lilac: #1f1830;
+    --pastel-rose: #2a151a;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-app);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }

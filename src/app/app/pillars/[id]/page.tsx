@@ -47,13 +47,13 @@ async function PillarDetail({ params }: { params: Promise<{ id: string }> }) {
           <PillarTile color={pillar.color} icon={pillar.icon} size='lg' />
           <h1 className='text-3xl font-semibold'>{pillar.name}</h1>
           {isArchived && (
-            <span className='rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'>
+            <span className='rounded-full bg-bg-app px-3 py-1 text-xs font-medium text-muted'>
               Arquivado
             </span>
           )}
         </div>
         {pillar.description && (
-          <p className='whitespace-pre-line text-zinc-600 dark:text-zinc-400'>
+          <p className='whitespace-pre-line text-muted'>
             {pillar.description}
           </p>
         )}
@@ -103,7 +103,7 @@ async function PillarDetail({ params }: { params: Promise<{ id: string }> }) {
 
       <section className={`${card} p-6`}>
         <h2 className='font-medium'>Metas e hábitos</h2>
-        <p className='mt-2 text-sm text-zinc-600 dark:text-zinc-400'>
+        <p className='mt-2 text-sm text-muted'>
           As metas e os hábitos deste pilar vão aparecer aqui.
         </p>
       </section>

@@ -10,9 +10,74 @@
 - Evitar dependência prematura de IA ou de integrações complexas;
 - Facilitar testes e desenvolvimento orientado a especificações.
 
-## 2. Proposta inicial de stack
+## 2. System design (as-built)
 
-A stack exata permanece uma decisão técnica do projeto. Uma proposta inicial:
+Diagrama visual (FigJam): [Segundo Cérebro — System Design](https://www.figma.com/board/Ie3nZIqaGVlBHAedB17nq7).  
+Tokens e UI base: [docs/design-system.md](./design-system.md) (Figma Foundations).
+
+### Stack confirmada
+
+| Camada | Escolha |
+| --- | --- |
+| Client | Next.js App Router + React + TypeScript |
+| Hosting | Vercel (Fluid Compute, Node.js) |
+| Application | Server Components, Server Actions, `cacheComponents` |
+| Auth | Auth.js v5 — Google OAuth + Credentials (JWT) |
+| Persistence | Drizzle ORM + Neon PostgreSQL (`neon-http`) |
+| Validation | Zod |
+| UI icons | `lucide-react` (pilares) |
+| Tests | Vitest (DB de teste) + Playwright (e2e) |
+
+Ainda não no as-built: e-mail transacional, Vercel Cron de lembretes, fila async, RAG/IA.
+
+### Diagrama lógico
+
+```mermaid
+flowchart LR
+  subgraph client ["Client"]
+    web["Next.js Web App"]
+  end
+  subgraph gateway ["Edge and Hosting"]
+    vercel["Vercel Fluid Compute"]
+  end
+  subgraph service ["Application"]
+    app["Next.js App Router"]
+    auth["Auth.js"]
+    actions["Server Actions"]
+  end
+  subgraph datastore ["Data"]
+    neon["Neon PostgreSQL"]
+  end
+  subgraph external ["External"]
+    google["Google OAuth"]
+  end
+
+  web -->|"HTTPS"| vercel
+  vercel -->|"Routes"| app
+  app -->|"Session"| auth
+  app -->|"Mutations"| actions
+  auth -->|"Reads Users"| neon
+  actions -->|"Read Write"| neon
+  auth -.->|"OAuth"| google
+```
+
+### Módulos de aplicação
+
+Código em `src/features/<domínio>/{domain,application,infra,presentation}` + `src/shared`.  
+Cada feature expõe API client-safe e `server.ts` com `server-only`.
+
+| Feature | Responsabilidade atual |
+| --- | --- |
+| `auth` | Login Google/senha, sessão, rate limit de login |
+| `preferences` | Fuso, template de journal |
+| `pillars` | CRUD, ordem, arquivar |
+| `horizons` | Rótulos de prazo + seed atômico |
+
+Rotas autenticadas sob `/app/*` chamam `requireUserId()`; mutações só via Server Actions (sem REST público no MVP).
+
+## 3. Proposta inicial de stack (histórico)
+
+Antes do as-built, a proposta era:
 
 - **Frontend e aplicação web:** Next.js com React e TypeScript;
 - **Backend:** endpoints de servidor do Next.js ou serviço Node.js separado, conforme a necessidade;
@@ -23,9 +88,9 @@ A stack exata permanece uma decisão técnica do projeto. Uma proposta inicial:
 - **Tarefas agendadas:** serviço de cron ou fila para lembretes;
 - **Hospedagem:** provedor que suporte a aplicação, banco, tarefas agendadas e gestão segura de segredos.
 
-Essas são recomendações iniciais, não escolhas já confirmadas.
+Seção 2 acima reflete o que já está implementado.
 
-## 3. Contextos de domínio
+## 4. Contextos de domínio
 
 ### Identidade e preferências
 
@@ -59,7 +124,7 @@ Responsável por gerar e disponibilizar arquivos com os dados do usuário.
 
 Contexto reservado para busca semântica, RAG e geração de insights. Não faz parte do MVP.
 
-## 4. Preparação para múltiplos usuários
+## 5. Preparação para múltiplos usuários
 
 Mesmo que inicialmente exista apenas uma usuária, os dados devem ser vinculados a `user_id`.
 
@@ -71,7 +136,7 @@ Requisitos:
 - Se a plataforma de banco permitir, aplicar políticas de segurança no próprio banco;
 - Criar testes que verifiquem isolamento entre usuários.
 
-## 5. Arquitetura lógica
+## 6. Arquitetura lógica
 
 Fluxo geral:
 
@@ -82,7 +147,7 @@ Fluxo geral:
 5. Um processo agendado identifica lembretes pendentes.
 6. O serviço de notificação envia e registra o resultado.
 
-## 6. Notificações agendadas
+## 7. Notificações agendadas
 
 Fluxo proposto:
 
@@ -95,7 +160,7 @@ Fluxo proposto:
 
 A definição do momento exato do lembrete e da política de repetição deve ser documentada antes da implementação.
 
-## 7. Dados e datas
+## 8. Dados e datas
 
 - Armazenar instantes de criação e alteração em UTC;
 - Armazenar datas de check-in como datas locais associadas ao fuso do usuário;
@@ -103,7 +168,7 @@ A definição do momento exato do lembrete e da política de repetição deve se
 - Não converter silenciosamente uma data de check-in para outro dia;
 - Guardar a data de referência do registro separada do instante em que foi criado, quando necessário.
 
-## 8. Observabilidade
+## 9. Observabilidade
 
 O sistema deve registrar erros técnicos importantes sem incluir textos pessoais, dados de saúde ou conteúdo de journaling nos logs por padrão.
 
@@ -115,7 +180,7 @@ Eventos úteis:
 - Erros de persistência;
 - Falha na geração de exportação.
 
-## 9. Evolução para IA e RAG
+## 10. Evolução para IA e RAG
 
 Na fase futura:
 

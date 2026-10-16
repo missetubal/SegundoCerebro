@@ -8,11 +8,11 @@ export default function PillarNotFound() {
       <section
         className={`${card} flex flex-col items-center gap-3 border-dashed p-10 text-center`}
       >
-        <span className='inline-flex size-10 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800'>
+        <span className='inline-flex size-10 items-center justify-center rounded-full bg-bg-app text-muted'>
           <Compass className='size-5' aria-hidden />
         </span>
         <h1 className='font-medium'>Pilar não encontrado</h1>
-        <p className='text-sm text-zinc-600 dark:text-zinc-400'>
+        <p className='text-sm text-muted'>
           Ele pode ter sido excluído ou o endereço está incompleto.
         </p>
         <Link href='/app/pillars' className={primaryButton}>

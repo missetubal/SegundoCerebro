@@ -18,7 +18,7 @@ export default function HorizonsPage() {
       <header className='flex flex-col gap-1'>
         <span className={eyebrow}>Direção</span>
         <h1 className='text-3xl font-semibold'>Horizontes</h1>
-        <p className='text-sm text-zinc-600 dark:text-zinc-400'>
+        <p className='text-sm text-muted'>
           Curto, médio e longo prazo são rótulos seus — sem durações fixas no
           sistema.
         </p>
@@ -39,7 +39,7 @@ async function HorizonsContent() {
       {horizons.length === 0 ? (
         <section className={`${card} p-6 text-center`}>
           <p className='font-medium'>Nenhum horizonte por aqui.</p>
-          <p className='mt-1 text-sm text-zinc-600 dark:text-zinc-400'>
+          <p className='mt-1 text-sm text-muted'>
             Crie os rótulos que fazem sentido para as suas metas.
           </p>
         </section>

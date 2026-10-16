@@ -33,7 +33,7 @@ type Props = {
 const EMPTY: PillarValues = { name: '', description: null, color: null, icon: null };
 
 const optionClass =
-  'flex size-10 cursor-pointer items-center justify-center rounded-xl ring-zinc-900 ring-offset-2 peer-checked:ring-2 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 dark:ring-zinc-100 dark:ring-offset-zinc-950';
+  'flex size-10 cursor-pointer items-center justify-center rounded-xl ring-ink ring-offset-2 ring-offset-bg-card peer-checked:ring-2 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4';
 
 export function PillarForm({
   action,
@@ -73,7 +73,7 @@ export function PillarForm({
 
       <div className='flex flex-col gap-2'>
         <label htmlFor='description' className='font-medium'>
-          Descrição <span className='text-sm font-normal text-zinc-500'>(opcional)</span>
+          Descrição <span className='text-sm font-normal text-muted'>(opcional)</span>
         </label>
         <textarea
           id='description'
@@ -183,7 +183,7 @@ function ChoiceOption({
       />
       <span className='sr-only'>{label}</span>
       <span
-        className={`${optionClass} bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800`}
+        className={`${optionClass} bg-bg-app hover:bg-border`}
       >
         {children}
       </span>

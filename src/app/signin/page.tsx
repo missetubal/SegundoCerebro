@@ -12,7 +12,7 @@ export default function SignInPage({ searchParams }: PageProps<'/signin'>) {
         <AuthErrorNotice searchParams={searchParams} />
       </Suspense>
       <PasswordSignInForm />
-      <p className='text-center text-sm text-zinc-600 dark:text-zinc-400'>ou</p>
+      <p className='text-center text-sm text-muted'>ou</p>
       <form
         action={async () => {
           'use server';

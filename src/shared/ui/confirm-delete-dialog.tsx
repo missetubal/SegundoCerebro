@@ -40,12 +40,12 @@ export function ConfirmDeleteDialog({
       <dialog
         ref={dialogRef}
         aria-labelledby={`delete-title-${id}`}
-        className='m-auto w-[min(28rem,calc(100%-2rem))] rounded-2xl border border-zinc-200 bg-white p-6 text-left text-zinc-900 backdrop:bg-black/40 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+        className='m-auto w-[min(28rem,calc(100%-2rem))] rounded-2xl border border-border bg-bg-card p-6 text-left text-ink backdrop:bg-black/40'
       >
         <h2 id={`delete-title-${id}`} className='text-lg font-semibold'>
           {title}
         </h2>
-        <p className='mt-2 text-sm text-zinc-600 dark:text-zinc-400'>
+        <p className='mt-2 text-sm text-muted'>
           {description}
         </p>
         <form action={formAction} className='mt-6 flex justify-end gap-2'>
