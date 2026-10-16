@@ -23,7 +23,7 @@ Roda em PR, push em `main` e `workflow_dispatch`:
 
 ### E2E (opcional)
 
-Secrets `E2E_EMAIL` e `E2E_PASSWORD`. Sem eles, o job pula Playwright.
+Secrets `E2E_EMAIL` e `E2E_PASSWORD` (expostos como `env` no job — não usar `secrets` em `if:`). Sem eles, o job pula Playwright.
 
 ## CD (`.github/workflows/cd.yml`)
 
