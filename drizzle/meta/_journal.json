@@ -43,6 +43,13 @@
       "when": 1792089362172,
       "tag": "0005_rate_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792200000000,
+      "tag": "0006_rename_pillar_to_area",
+      "breakpoints": true
     }
   ]
 }

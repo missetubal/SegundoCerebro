@@ -109,8 +109,8 @@ export const userPreferences = pgTable('user_preference', {
     .defaultNow(),
 });
 
-export const pillars = pgTable(
-  'pillar',
+export const areas = pgTable(
+  'area',
   {
     id: text('id')
       .primaryKey()
@@ -131,12 +131,12 @@ export const pillars = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (pillar) => [
-    uniqueIndex('pillar_user_name_unique').on(
-      pillar.userId,
-      sql`lower(${pillar.name})`,
+  (area) => [
+    uniqueIndex('area_user_name_unique').on(
+      area.userId,
+      sql`lower(${area.name})`,
     ),
-    index('pillar_user_sort_idx').on(pillar.userId, pillar.sortOrder),
+    index('area_user_sort_idx').on(area.userId, area.sortOrder),
   ],
 );
 

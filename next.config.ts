@@ -12,6 +12,30 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/app/pillars',
+        destination: '/app/areas',
+        permanent: true,
+      },
+      {
+        source: '/app/pillars/new',
+        destination: '/app/areas/new',
+        permanent: true,
+      },
+      {
+        source: '/app/pillars/:id',
+        destination: '/app/areas/:id',
+        permanent: true,
+      },
+      {
+        source: '/app/pillars/:id/edit',
+        destination: '/app/areas/:id/edit',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

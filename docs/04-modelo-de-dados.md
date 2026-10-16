@@ -39,7 +39,7 @@ Campos sugeridos:
 - `created_at`
 - `updated_at`
 
-### Area (UI: Área; código/DB hoje: `pillar`)
+### Area
 
 Campos sugeridos:
 
@@ -60,7 +60,7 @@ Campos sugeridos:
 
 - `id`
 - `user_id`
-- `primary_pillar_id`
+- `primary_area_id`
 - `title`
 - `description`
 - `horizon_label`
@@ -76,14 +76,14 @@ Campos sugeridos:
 
 `horizon_label` deve permitir classificações configuradas pelo usuário. Não codificar durações fixas de curto, médio e longo prazo.
 
-### GoalPillar
+### GoalArea
 
 Relação opcional entre uma meta e áreas adicionais.
 
 Campos sugeridos:
 
 - `goal_id`
-- `pillar_id`
+- `area_id`
 
 ### NextStep
 
@@ -123,14 +123,14 @@ Campos sugeridos:
 
 `frequency_config` pode ser estruturado em um objeto validado, com regras explícitas para cada tipo de frequência.
 
-### HabitPillar
+### HabitArea
 
 Relação entre hábito e uma ou mais áreas.
 
 Campos sugeridos:
 
 - `habit_id`
-- `pillar_id`
+- `area_id`
 
 ### HabitGoal
 

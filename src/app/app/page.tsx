@@ -12,7 +12,7 @@ export default function AppHome() {
       </Suspense>
       <p>Em breve: check-in, metas e hábitos.</p>
       <nav className='flex flex-col gap-2'>
-        <Link href='/app/pillars' className='underline'>
+        <Link href='/app/areas' className='underline'>
           Áreas
         </Link>
         <Link href='/app/horizons' className='underline'>

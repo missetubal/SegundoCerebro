@@ -70,7 +70,7 @@ Cada feature expõe API client-safe e `server.ts` com `server-only`.
 | --- | --- |
 | `auth` | Login Google/senha, sessão, rate limit de login |
 | `preferences` | Fuso, template de journal |
-| `pillars` | CRUD, ordem, arquivar |
+| `areas` | CRUD, ordem, arquivar |
 | `horizons` | Rótulos de prazo + seed atômico |
 
 Rotas autenticadas sob `/app/*` chamam `requireUserId()`; mutações só via Server Actions (sem REST público no MVP).
