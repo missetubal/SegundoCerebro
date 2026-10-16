@@ -5,7 +5,7 @@ context: |
   All artifacts must be written in pt-BR.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-  Projeto: Segundo Cérebro — app web pessoal para pilares, metas, hábitos,
+  Projeto: Segundo Cérebro — app web pessoal para áreas, metas, hábitos,
   check-ins e medicamentos. Docs de produto em docs/00..08.
   Stack: Next.js 16 (App Router, cacheComponents ligado) + TypeScript +
   Tailwind; PostgreSQL no Neon via Drizzle (driver neon-http); Auth.js v5

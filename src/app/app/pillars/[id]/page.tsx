@@ -22,7 +22,7 @@ export default function PillarPage({ params }: PageProps<'/app/pillars/[id]'>) {
         className='inline-flex items-center gap-2 self-start text-sm'
       >
         <ArrowLeft className='size-4' aria-hidden />
-        Pilares
+        Áreas
       </Link>
       <Suspense fallback={<p>Carregando…</p>}>
         <PillarDetail params={params} />
@@ -42,7 +42,7 @@ async function PillarDetail({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <header className='flex flex-col gap-3'>
-        <span className={eyebrow}>Pilar</span>
+        <span className={eyebrow}>Área</span>
         <div className='flex items-center gap-4'>
           <PillarTile color={pillar.color} icon={pillar.icon} size='lg' />
           <h1 className='text-3xl font-semibold'>{pillar.name}</h1>
@@ -89,7 +89,7 @@ async function PillarDetail({ params }: { params: Promise<{ id: string }> }) {
           action={deletePillarAction}
           id={pillar.id}
           title={`Excluir “${pillar.name}”?`}
-          description='A exclusão não pode ser desfeita. Se quiser apenas tirar o pilar das telas principais, arquive em vez de excluir.'
+          description='A exclusão não pode ser desfeita. Se quiser apenas tirar a área das telas principais, arquive em vez de excluir.'
           triggerLabel='Excluir'
           triggerClassName={dangerButton}
           trigger={
@@ -104,7 +104,7 @@ async function PillarDetail({ params }: { params: Promise<{ id: string }> }) {
       <section className={`${card} p-6`}>
         <h2 className='font-medium'>Metas e hábitos</h2>
         <p className='mt-2 text-sm text-muted'>
-          As metas e os hábitos deste pilar vão aparecer aqui.
+          As metas e os hábitos desta área vão aparecer aqui.
         </p>
       </section>
     </>

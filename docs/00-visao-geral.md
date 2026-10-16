@@ -23,7 +23,7 @@ Além disso, a dificuldade de manter journaling exige que o registro seja flexí
 
 Oferecer um espaço personalizável para:
 
-- Organizar a vida por pilares;
+- Organizar a vida por áreas;
 - Transformar metas em próximos passos;
 - Criar hábitos personalizados;
 - Registrar o progresso sem exigir uma rotina rígida;
@@ -33,7 +33,7 @@ Oferecer um espaço personalizável para:
 
 ## Princípios do produto
 
-1. **Personalização:** cada pessoa decide quais pilares, metas, hábitos e informações são relevantes.
+1. **Personalização:** cada pessoa decide quais áreas, metas, hábitos e informações são relevantes.
 2. **Baixa fricção:** deve ser possível registrar algo rapidamente e aprofundar depois.
 3. **Sem culpa:** dias sem registro não devem ser tratados como falha moral ou punição.
 4. **Histórico confiável:** registros retroativos são permitidos e devem manter a data a que se referem.
@@ -51,9 +51,9 @@ A criadora do projeto, usando o sistema para organizar e acompanhar a própria v
 
 Uma pessoa que deseja acompanhar áreas da vida, objetivos, hábitos e reflexões em um espaço digital personalizável.
 
-## Pilares iniciais sugeridos
+## Áreas iniciais sugeridas
 
-Os pilares abaixo são valores iniciais, não categorias obrigatórias ou fixas:
+As áreas abaixo são valores iniciais, não categorias obrigatórias ou fixas:
 
 - Carreira (acadêmica e profissional);
 - Negócio;
@@ -65,12 +65,12 @@ Os pilares abaixo são valores iniciais, não categorias obrigatórias ou fixas:
 - Lazer;
 - Casa.
 
-O usuário poderá criar, editar, reordenar, arquivar e excluir seus próprios pilares.
+O usuário poderá criar, editar, reordenar, arquivar e excluir suas próprias áreas.
 
 ## Escopo do MVP
 
 - Conta de usuário e autenticação;
-- Criação e personalização de pilares;
+- Criação e personalização de áreas;
 - Metas de curto, médio e longo prazo, com horizontes definidos pelo usuário;
 - Hábitos personalizados e acompanhamento de frequência;
 - Check-in diário com preenchimento retroativo;

@@ -89,12 +89,12 @@ Componentes compartilhados em `src/shared/ui/tokens.ts`: `primaryButton`, `secon
 ## 7. Relação com o código atual
 
 - Tokens Foundations ligados em `globals.css` + `shared/ui/tokens.ts`.
-- Cores de pilar em `src/features/pillars/presentation/style.ts` usam paleta Tailwind (`blue`, `amber`, …) — conjunto de domínio, não os pastéis de KPI do Foundations.
-- Shells `/app`, forms e neutro de pilar já usam tokens; paleta colorida de pilar (`blue`/`amber`/…) permanece domínio separado.
+- Cores de área em `src/features/pillars/presentation/style.ts` usam paleta Tailwind (`blue`, `amber`, …) — conjunto de domínio, não os pastéis de KPI do Foundations.
+- Shells `/app`, forms e neutro de área já usam tokens; paleta colorida de área (`blue`/`amber`/…) permanece domínio separado.
 
 ## 8. Fora de escopo (ainda)
 
 - Dark mode alinhado aos tokens Foundations (Figma atual é light).
 - Escala tipográfica completa (display, H1–H3).
 - Spacing scale, radius scale, motion.
-- Ícones (produto usa `lucide-react` nos pilares).
+- Ícones (produto usa `lucide-react` nas áreas).

@@ -2,13 +2,13 @@
 
 ## 1. Objetivo do produto
 
-Criar uma aplicação web que ajude pessoas a organizar e acompanhar diferentes pilares da vida, conectando metas, hábitos, próximos passos, registros diários e revisões periódicas.
+Criar uma aplicação web que ajude pessoas a organizar e acompanhar diferentes áreas da vida, conectando metas, hábitos, próximos passos, registros diários e revisões periódicas.
 
 O sistema deve ser útil inicialmente para uma única pessoa, mas ter uma estrutura de dados preparada para múltiplos usuários.
 
 ## 2. Objetivos do MVP
 
-1. Permitir que o usuário configure os pilares que deseja acompanhar.
+1. Permitir que o usuário configure as áreas que deseja acompanhar.
 2. Permitir a criação de metas com períodos definidos pelo usuário.
 3. Permitir a criação de hábitos personalizados e o acompanhamento de sua frequência.
 4. Facilitar o check-in diário e permitir o preenchimento de dias anteriores.
@@ -22,20 +22,20 @@ O sistema deve ser útil inicialmente para uma única pessoa, mas ter uma estrut
 
 - Fornecer aconselhamento médico ou alterar orientações sobre medicamentos;
 - Automatizar decisões importantes com IA;
-- Garantir correlações causais entre pilares;
+- Garantir correlações causais entre áreas;
 - Criar uma rede social ou compartilhamento público;
 - Implementar cobrança ou gestão comercial de assinaturas;
 - Substituir aplicativos de saúde, finanças ou gerenciamento de tarefas especializados.
 
 ## 4. Conceitos principais
 
-### Pilar
+### Área
 
 Uma área da vida criada e organizada pelo usuário, como Saúde ou Carreira.
 
 ### Meta
 
-Um resultado desejado associado a um pilar. Cada meta possui um horizonte temporal definido pelo usuário, podendo ser de curto, médio ou longo prazo, ou outra classificação personalizada.
+Um resultado desejado associado a uma área. Cada meta possui um horizonte temporal definido pelo usuário, podendo ser de curto, médio ou longo prazo, ou outra classificação personalizada.
 
 ### Próximo passo
 
@@ -43,7 +43,7 @@ Uma ação concreta que contribui para uma meta. Pode ter prazo, estado e priori
 
 ### Hábito
 
-Uma prática recorrente criada pelo usuário, ligada a um ou mais pilares e, opcionalmente, a uma meta.
+Uma prática recorrente criada pelo usuário, ligada a uma ou mais áreas e, opcionalmente, a uma meta.
 
 ### Check-in diário
 
@@ -55,7 +55,7 @@ Uma reflexão guiada referente a um período semanal ou mensal.
 
 ### Tag
 
-Uma etiqueta transversal que pode ligar registros, hábitos, metas ou pilares diferentes.
+Uma etiqueta transversal que pode ligar registros, hábitos, metas ou áreas diferentes.
 
 ## 5. Personas e necessidades
 
@@ -65,7 +65,7 @@ Precisa registrar hábitos de forma simples, inclusive quando esquece de preench
 
 ### Persona B — Pessoa com vários projetos e áreas da vida
 
-Precisa conectar metas, tarefas e hábitos a pilares diferentes, sem perder uma visão geral.
+Precisa conectar metas, tarefas e hábitos a áreas diferentes, sem perder uma visão geral.
 
 ### Persona C — Pessoa reflexiva
 
@@ -77,7 +77,7 @@ Quer métricas, gráficos, filtros, exportação e, futuramente, insights gerado
 
 ## 6. Requisitos funcionais de alto nível
 
-- Gerenciar pilares;
+- Gerenciar áreas;
 - Gerenciar metas;
 - Gerenciar próximos passos;
 - Gerenciar hábitos e frequências;
@@ -94,7 +94,7 @@ Detalhes normativos estão em `02-requisitos-e-regras-de-negocio.md`.
 
 ## 7. Critérios de sucesso do MVP
 
-- O usuário consegue criar e editar seus pilares, metas e hábitos sem intervenção técnica.
+- O usuário consegue criar e editar seus áreas, metas e hábitos sem intervenção técnica.
 - É possível registrar um check-in em menos de cinco minutos usando o fluxo rápido.
 - O usuário consegue preencher ou corrigir registros de dias anteriores.
 - As métricas são exibidas com período e unidade claramente identificados.

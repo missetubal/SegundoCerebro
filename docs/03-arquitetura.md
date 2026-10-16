@@ -25,7 +25,7 @@ Tokens e UI base: [docs/design-system.md](./design-system.md) (Figma Foundations
 | Auth | Auth.js v5 — Google OAuth + Credentials (JWT) |
 | Persistence | Drizzle ORM + Neon PostgreSQL (`neon-http`) |
 | Validation | Zod |
-| UI icons | `lucide-react` (pilares) |
+| UI icons | `lucide-react` (áreas) |
 | Tests | Vitest (DB de teste) + Playwright (e2e) |
 
 Ainda não no as-built: e-mail transacional, Vercel Cron de lembretes, fila async, RAG/IA.
@@ -98,7 +98,7 @@ Responsável por autenticação, perfil, fuso horário e preferências globais.
 
 ### Organização pessoal
 
-Responsável por pilares, tags e configuração do dashboard.
+Responsável por áreas, tags e configuração do dashboard.
 
 ### Metas
 
@@ -189,4 +189,4 @@ Na fase futura:
 - Permitir ao usuário desativar a indexação e excluir dados derivados;
 - Não usar insights de IA como diagnóstico ou orientação profissional;
 - Mostrar quais registros deram origem a um insight;
-- Tratar relações entre pilares como hipóteses ou correlações, nunca como causalidade garantida.
+- Tratar relações entre áreas como hipóteses ou correlações, nunca como causalidade garantida.

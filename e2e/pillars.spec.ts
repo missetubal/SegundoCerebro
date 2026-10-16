@@ -9,13 +9,13 @@ test.describe('pillars', () => {
   test('creates, archives and shows the pillar under Arquivados', async ({
     page,
   }) => {
-    const name = `E2E Pilar ${Date.now()}`;
+    const name = `E2E Área ${Date.now()}`;
 
     await page.goto('/app/pillars/new');
     await page.getByLabel('Nome').fill(name);
     await page.getByRole('radio', { name: 'Azul' }).click({ force: true });
     await page.getByRole('radio', { name: 'Coração' }).click({ force: true });
-    await page.getByRole('button', { name: 'Criar pilar' }).click();
+    await page.getByRole('button', { name: 'Criar área' }).click();
 
     await expect(page).toHaveURL(/\/app\/pillars\/[^/]+$/);
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();

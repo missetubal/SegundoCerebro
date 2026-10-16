@@ -28,7 +28,7 @@ export default function PillarsPage() {
       <header className='flex flex-wrap items-end justify-between gap-4'>
         <div className='flex flex-col gap-1'>
           <span className={eyebrow}>Estrutura</span>
-          <h1 className='text-3xl font-semibold'>Pilares</h1>
+          <h1 className='text-3xl font-semibold'>Áreas</h1>
           <p className='text-sm text-muted'>
             As áreas da sua vida que você acompanha. Reordene, edite cores e
             ícones quando quiser.
@@ -36,7 +36,7 @@ export default function PillarsPage() {
         </div>
         <Link href='/app/pillars/new' className={primaryButton}>
           <Plus className='size-4' aria-hidden />
-          Novo pilar
+          Nova área
         </Link>
       </header>
       <Suspense fallback={<p>Carregando…</p>}>
@@ -54,13 +54,13 @@ async function PillarsContent() {
     <>
       {active.length === 0 ? (
         <section className={`${card} flex flex-col items-center gap-3 p-8 text-center`}>
-          <p className='font-medium'>Nenhum pilar ativo por aqui.</p>
+          <p className='font-medium'>Nenhuma área ainda — que tal Finanças, Planejamento ou Aprendizado?</p>
           <p className='text-sm text-muted'>
             Comece pelas áreas que mais importam para você agora.
           </p>
           <Link href='/app/pillars/new' className={primaryButton}>
             <Plus className='size-4' aria-hidden />
-            Novo pilar
+            Nova área
           </Link>
         </section>
       ) : (

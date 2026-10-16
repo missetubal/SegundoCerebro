@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Segundo Cérebro",
-  description: "Pilares, hábitos e check-ins, sem culpa.",
+  description: "Áreas, hábitos e check-ins, sem culpa.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

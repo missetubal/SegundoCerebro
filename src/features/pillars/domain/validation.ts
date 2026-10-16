@@ -9,7 +9,7 @@ export const pillarInputSchema = z.object({
   name: formText.pipe(
     z
       .string()
-      .min(1, 'Dê um nome ao pilar.')
+      .min(1, 'Dê um nome à área.')
       .max(PILLAR_NAME_MAX, `Use até ${PILLAR_NAME_MAX} caracteres no nome.`),
   ),
   description: optionalFormText.pipe(

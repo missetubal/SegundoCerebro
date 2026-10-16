@@ -44,7 +44,7 @@ describe('pillarInputSchema', () => {
     const result = pillarInputSchema.safeParse({ name: '   ' });
 
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].message).toBe('Dê um nome ao pilar.');
+    expect(result.error?.issues[0].message).toBe('Dê um nome à área.');
   });
 
   it('enforces name and description limits', () => {
