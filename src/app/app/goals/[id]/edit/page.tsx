@@ -3,13 +3,12 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { listAreas } from '@/features/areas/server';
 import { requireUserId } from '@/features/auth/server';
-import { GoalForm } from '@/features/goals';
+import { GoalForm, parseGoalStatus } from '@/features/goals';
 import {
   getGoal,
   updateGoalAction,
   type Goal,
 } from '@/features/goals/server';
-import type { GoalStatus } from '@/features/goals';
 import { listHorizons } from '@/features/horizons/server';
 import { eyebrow } from '@/shared/ui';
 
@@ -35,10 +34,12 @@ async function EditGoalContent({
   const goal = await getGoal(userId, id);
   if (!goal) notFound();
 
-  const [{ active: areas }, horizons] = await Promise.all([
+  const [{ active, archived }, horizons] = await Promise.all([
     listAreas(userId),
     listHorizons(userId),
   ]);
+
+  const areaOptions = areaOptionsForGoal(active, archived, goal.primaryAreaId);
 
   return (
     <>
@@ -51,7 +52,7 @@ async function EditGoalContent({
       </header>
       <GoalForm
         action={updateGoalAction}
-        areas={areas.map((area) => ({ id: area.id, name: area.name }))}
+        areas={areaOptions}
         horizons={horizons.map((horizon) => ({
           id: horizon.id,
           name: horizon.name,
@@ -64,13 +65,31 @@ async function EditGoalContent({
   );
 }
 
+function areaOptionsForGoal(
+  active: Array<{ id: string; name: string }>,
+  archived: Array<{ id: string; name: string }>,
+  primaryAreaId: string,
+) {
+  const options = active.map((area) => ({ id: area.id, name: area.name }));
+  if (options.some((area) => area.id === primaryAreaId)) return options;
+
+  const current = archived.find((area) => area.id === primaryAreaId);
+  if (current) {
+    options.push({
+      id: current.id,
+      name: `${current.name} (arquivada)`,
+    });
+  }
+  return options;
+}
+
 function toFormValues(goal: Goal) {
   return {
     id: goal.id,
     title: goal.title,
     primaryAreaId: goal.primaryAreaId,
     horizonId: goal.horizonId,
-    status: goal.status as GoalStatus,
+    status: parseGoalStatus(goal.status),
     startDate: goal.startDate,
     targetDate: goal.targetDate,
   };

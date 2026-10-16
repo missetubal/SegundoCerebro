@@ -4,9 +4,9 @@ import { listAreas } from '@/features/areas/server';
 import { auth, requireUserId, signOut } from '@/features/auth/server';
 import {
   listGoals,
-  listNextSteps,
+  listOpenNextSteps,
   type Goal,
-  type NextStep,
+  type OpenNextStep,
 } from '@/features/goals/server';
 import {
   listHabitsForDate,
@@ -36,13 +36,15 @@ export default function AppHome() {
 
 async function HomeDashboard() {
   const userId = await requireUserId();
-  const [session, preferences, areas, goals, horizons] = await Promise.all([
-    auth(),
-    getPreferences(userId),
-    listAreas(userId),
-    listGoals(userId),
-    listHorizons(userId),
-  ]);
+  const [session, preferences, areas, goals, horizons, openStepsRaw] =
+    await Promise.all([
+      auth(),
+      getPreferences(userId),
+      listAreas(userId),
+      listGoals(userId),
+      listHorizons(userId),
+      listOpenNextSteps(userId),
+    ]);
   const today = calendarDateInTimeZone(preferences.timezone);
   const todayHabits = await listHabitsForDate(
     userId,
@@ -50,18 +52,13 @@ async function HomeDashboard() {
     preferences.timezone,
   );
 
-  const openSteps: Array<NextStep & { goalTitle: string; areaName: string }> =
-    [];
-  for (const goal of goals.active.slice(0, 8)) {
-    const steps = await listNextSteps(userId, goal.id);
-    const areaName =
-      [...areas.active, ...areas.archived].find(
-        (area) => area.id === goal.primaryAreaId,
-      )?.name ?? 'Área';
-    for (const step of steps.filter((item) => item.status === 'open')) {
-      openSteps.push({ ...step, goalTitle: goal.title, areaName });
-    }
-  }
+  const areaById = new Map(
+    [...areas.active, ...areas.archived].map((area) => [area.id, area.name]),
+  );
+  const openSteps = openStepsRaw.slice(0, 6).map((step) => ({
+    ...step,
+    areaName: areaById.get(step.primaryAreaId) ?? 'Área',
+  }));
 
   const firstName = (session?.user?.name ?? 'você').split(' ')[0];
   const greeting = greetingForHour(preferences.timezone);
@@ -126,8 +123,8 @@ async function HomeDashboard() {
         <KpiTile
           pastel='peach'
           label='Meds'
-          value='—'
-          hint='em breve'
+          value='Em breve'
+          hint='medicamentos na próxima fatia'
         />
         <KpiTile
           pastel='lilac'
@@ -146,7 +143,7 @@ async function HomeDashboard() {
       </section>
 
       <section className='grid gap-4 lg:grid-cols-2'>
-        <NextStepsCard steps={openSteps.slice(0, 6)} />
+        <NextStepsCard steps={openSteps} />
         <AreaSummaryCard areas={areas.active} goals={goals.active} />
       </section>
 
@@ -254,9 +251,6 @@ function ActiveGoalsCard({
                 >
                   {goal.title}
                 </Link>
-                <div className='h-1.5 overflow-hidden rounded-full bg-bg-app'>
-                  <div className='h-full w-1/3 rounded-full bg-teal-500' />
-                </div>
                 <span className={caption}>{horizon}</span>
               </li>
             );
@@ -270,7 +264,7 @@ function ActiveGoalsCard({
 function NextStepsCard({
   steps,
 }: {
-  steps: Array<NextStep & { goalTitle: string; areaName: string }>;
+  steps: Array<OpenNextStep & { areaName: string }>;
 }) {
   return (
     <section className={`${card} flex flex-col gap-3 p-4`}>

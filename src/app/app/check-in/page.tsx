@@ -51,9 +51,9 @@ async function CheckInContent() {
         </div>
       </header>
 
-      <p className={`${card} bg-pastel-sky p-3 text-sm text-sky-800`}>
-        Check-in completo (salvar registros) chega na Fatia 4. Aqui você já vê
-        os hábitos ativos do dia — base pronta.
+      <p className={`${card} bg-pastel-sky p-3 text-sm text-sky-800 dark:text-sky-200`}>
+        Em breve: salvar check-in. Por enquanto só a lista dos hábitos do dia —
+        base da Fatia 3.
       </p>
 
       <section className='flex flex-col gap-3'>

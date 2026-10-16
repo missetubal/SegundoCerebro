@@ -79,42 +79,48 @@ export function AppSidebar({ areas, userName }: Props) {
             <History className='size-3.5' aria-hidden />
             Histórico
           </span>
+          <NavLink
+            href='/app/goals'
+            label='Metas'
+            active={is('/app/goals')}
+            icon={<Target className='size-3.5' aria-hidden />}
+          />
+          <NavLink
+            href='/app/habits'
+            label='Hábitos'
+            active={is('/app/habits')}
+            icon={<HeartPulse className='size-3.5' aria-hidden />}
+          />
+          <NavLink
+            href='/app/check-in'
+            label='Check-in'
+            active={is('/app/check-in')}
+            icon={<HeartPulse className='size-3.5' aria-hidden />}
+          />
         </div>
 
-        {areas.map((area) => (
-          <div key={area.id} className='flex flex-col gap-0.5'>
-            <div className='mb-1 flex items-center gap-2 px-2.5'>
-              <span className='flex size-5 items-center justify-center rounded-md bg-bg-app text-[10px] font-bold text-muted'>
-                {area.name.trim().charAt(0).toUpperCase() || '?'}
-              </span>
-              <span
-                className={`${caption} truncate font-semibold uppercase tracking-wider`}
-              >
-                {area.name}
-              </span>
-            </div>
-            <NavLink
-              href={`/app/areas/${area.id}`}
-              label='Visão'
-              active={
-                is(`/app/areas/${area.id}`) && !pathname.includes('/edit')
-              }
-              icon={<Layers className='size-3.5' aria-hidden />}
-            />
-            <NavLink
-              href='/app/goals'
-              label='Metas'
-              active={is('/app/goals')}
-              icon={<Target className='size-3.5' aria-hidden />}
-            />
-            <NavLink
-              href='/app/habits'
-              label='Hábitos'
-              active={is('/app/habits')}
-              icon={<HeartPulse className='size-3.5' aria-hidden />}
-            />
+        {areas.length > 0 && (
+          <div className='flex flex-col gap-0.5'>
+            <span className={`${caption} px-2.5 font-semibold uppercase`}>
+              Áreas
+            </span>
+            {areas.map((area) => (
+              <NavLink
+                key={area.id}
+                href={`/app/areas/${area.id}`}
+                label={area.name}
+                active={
+                  is(`/app/areas/${area.id}`) && !pathname.includes('/edit')
+                }
+                icon={
+                  <span className='flex size-3.5 items-center justify-center text-[9px] font-bold'>
+                    {area.name.trim().charAt(0).toUpperCase() || '?'}
+                  </span>
+                }
+              />
+            ))}
           </div>
-        ))}
+        )}
 
         {areas.length === 0 && (
           <p className={`${caption} px-2.5`}>
@@ -126,12 +132,6 @@ export function AppSidebar({ areas, userName }: Props) {
           <span className={`${caption} px-2.5 font-semibold uppercase`}>
             Atalhos
           </span>
-          <NavLink
-            href='/app/check-in'
-            label='Check-in'
-            active={is('/app/check-in')}
-            icon={<HeartPulse className='size-3.5' aria-hidden />}
-          />
           <NavLink
             href='/app/horizons'
             label='Horizontes'

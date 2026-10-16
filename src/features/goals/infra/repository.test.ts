@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { createArea } from '@/features/areas/server';
+import { archiveArea, createArea } from '@/features/areas/server';
 import { listHorizons } from '@/features/horizons/server';
 import { createUserFixtures } from '@/test/fixtures';
 import type { GoalInput } from '../domain';
@@ -12,6 +12,7 @@ import {
   getGoal,
   listGoals,
   listNextSteps,
+  listOpenNextSteps,
   setGoalStatus,
   updateGoal,
 } from './repository';
@@ -107,6 +108,37 @@ describe('updateGoal and status', () => {
     expect((await listGoals(userId)).completed).toHaveLength(1);
     expect((await listGoals(userId)).active).toHaveLength(0);
   });
+
+  it('allows keeping an archived primary area on update', async () => {
+    const userId = await fixtures.createUser();
+    const { areaId, horizonId } = await seedAreaAndHorizon(userId);
+    const created = await createGoal(userId, goalInput(areaId, horizonId));
+    if (!created.ok) throw new Error('create failed');
+
+    await archiveArea(userId, areaId);
+
+    const updated = await updateGoal(
+      userId,
+      created.item.id,
+      goalInput(areaId, horizonId, { title: 'Ainda ligada à área arquivada' }),
+    );
+
+    expect(updated.ok && updated.item).toMatchObject({
+      title: 'Ainda ligada à área arquivada',
+      primaryAreaId: areaId,
+    });
+  });
+
+  it('rejects creating a goal with an archived area', async () => {
+    const userId = await fixtures.createUser();
+    const { areaId, horizonId } = await seedAreaAndHorizon(userId);
+    await archiveArea(userId, areaId);
+
+    expect(await createGoal(userId, goalInput(areaId, horizonId))).toEqual({
+      ok: false,
+      reason: 'invalid_area',
+    });
+  });
 });
 
 describe('next steps', () => {
@@ -129,6 +161,23 @@ describe('next steps', () => {
 
     await deleteNextStep(userId, listed[0]!.id);
     expect(await listNextSteps(userId, created.item.id)).toEqual([]);
+  });
+
+  it('lists open next steps across goals in one query shape', async () => {
+    const userId = await fixtures.createUser();
+    const { areaId, horizonId } = await seedAreaAndHorizon(userId);
+    const goal = await createGoal(userId, goalInput(areaId, horizonId));
+    if (!goal.ok) throw new Error('create failed');
+    await createNextStep(userId, goal.item.id, { title: 'Passo aberto' });
+
+    const open = await listOpenNextSteps(userId);
+    expect(open).toHaveLength(1);
+    expect(open[0]).toMatchObject({
+      title: 'Passo aberto',
+      goalTitle: 'Correr 5 km',
+      primaryAreaId: areaId,
+      status: 'open',
+    });
   });
 });
 

@@ -64,3 +64,11 @@ export const nextStepInputSchema = z.object({
 });
 
 export type NextStepInput = z.output<typeof nextStepInputSchema>;
+
+const goalStatusSchema = z.enum(GOAL_STATUSES);
+
+/** Parses a stored goal status; unknown values fall back to `active`. */
+export function parseGoalStatus(value: unknown): GoalStatus {
+  const result = goalStatusSchema.safeParse(value);
+  return result.success ? result.data : 'active';
+}

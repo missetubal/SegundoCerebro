@@ -7,6 +7,7 @@ export {
   NEXT_STEP_TITLE_MAX,
   goalInputSchema,
   nextStepInputSchema,
+  parseGoalStatus,
   type GoalInput,
   type GoalStatus,
   type NextStepInput,

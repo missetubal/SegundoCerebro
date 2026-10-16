@@ -4,10 +4,12 @@ import { createArea } from '@/features/areas/server';
 import { listHorizons } from '@/features/horizons/server';
 import { IDLE_STATE } from '@/shared/lib';
 import { createUserFixtures } from '@/test/fixtures';
-import { createGoal, getGoal, listNextSteps } from '../infra';
+import { createGoal, getGoal, listGoals, listNextSteps } from '../infra';
 import {
   createGoalAction,
   createNextStepAction,
+  deleteGoalAction,
+  setGoalStatusAction,
   updateGoalAction,
 } from './actions';
 
@@ -166,5 +168,51 @@ describe('createNextStepAction', () => {
 
     expect(state).toEqual({ status: 'success' });
     expect(await listNextSteps(userId, goal.item.id)).toHaveLength(1);
+  });
+});
+
+describe('setGoalStatusAction and deleteGoalAction', () => {
+  it('updates status for the session user', async () => {
+    const userId = await fixtures.createUser();
+    const { areaId, horizonId } = await seed(userId);
+    const goal = await createGoal(userId, {
+      title: 'Meta',
+      primaryAreaId: areaId,
+      horizonId,
+      status: 'active',
+      startDate: null,
+      targetDate: null,
+    });
+    if (!goal.ok) throw new Error('setup');
+    signInAs(userId);
+
+    const state = await setGoalStatusAction(
+      IDLE_STATE,
+      formWith({ id: goal.item.id, status: 'completed' }),
+    );
+
+    expect(state).toEqual({ status: 'success' });
+    expect((await listGoals(userId)).completed).toHaveLength(1);
+  });
+
+  it('deletes the goal and redirects', async () => {
+    const userId = await fixtures.createUser();
+    const { areaId, horizonId } = await seed(userId);
+    const goal = await createGoal(userId, {
+      title: 'Apagar',
+      primaryAreaId: areaId,
+      horizonId,
+      status: 'active',
+      startDate: null,
+      targetDate: null,
+    });
+    if (!goal.ok) throw new Error('setup');
+    signInAs(userId);
+
+    await expect(
+      deleteGoalAction(IDLE_STATE, formWith({ id: goal.item.id })),
+    ).rejects.toThrow('NEXT_REDIRECT:/app/goals');
+
+    expect(await getGoal(userId, goal.item.id)).toBeNull();
   });
 });

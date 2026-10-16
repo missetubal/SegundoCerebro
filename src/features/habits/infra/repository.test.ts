@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { createArea } from '@/features/areas/server';
+import { archiveArea, createArea } from '@/features/areas/server';
 import { createUserFixtures } from '@/test/fixtures';
 import type { HabitInput } from '../domain';
 import {
@@ -158,5 +158,22 @@ describe('updateHabit and isolation', () => {
     expect(await archiveHabit(userA, habitB.item.id)).toBe(false);
 
     expect((await listHabits(userB)).active).toHaveLength(1);
+  });
+
+  it('allows keeping an archived linked area on update', async () => {
+    const userId = await fixtures.createUser();
+    const area = await createOwnedArea(userId);
+    const created = await createHabit(userId, completionInput([area.id]));
+    if (!created.ok) throw new Error('create failed');
+
+    await archiveArea(userId, area.id);
+
+    const updated = await updateHabit(
+      userId,
+      created.item.id,
+      completionInput([area.id]),
+    );
+
+    expect(updated.ok && updated.item.areaIds).toEqual([area.id]);
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { goalInputSchema, nextStepInputSchema } from './validation';
+import {
+  goalInputSchema,
+  nextStepInputSchema,
+  parseGoalStatus,
+} from './validation';
 
 describe('goalInputSchema', () => {
   const valid = {
@@ -55,6 +59,15 @@ describe('goalInputSchema', () => {
   it('rejects an invalid status', () => {
     const result = goalInputSchema.safeParse({ ...valid, status: 'paused' });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('parseGoalStatus', () => {
+  it('accepts known statuses and falls back for unknown values', () => {
+    expect(parseGoalStatus('completed')).toBe('completed');
+    expect(parseGoalStatus('archived')).toBe('archived');
+    expect(parseGoalStatus('nope')).toBe('active');
+    expect(parseGoalStatus(null)).toBe('active');
   });
 });
 

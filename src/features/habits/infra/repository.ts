@@ -1,8 +1,7 @@
 import 'server-only';
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { getArea } from '@/features/areas/server';
 import { db, ownedBy } from '@/shared/db';
-import { habitAreas, habits } from '@/shared/db';
+import { areas, habitAreas, habits } from '@/shared/db';
 import { isoWeekdayFromDateYmd } from '@/shared/lib/calendar';
 import type { HabitInput } from '../domain';
 
@@ -14,15 +13,26 @@ export type HabitWriteResult =
   | { ok: true; item: HabitWithAreas }
   | { ok: false; reason: 'not_found' | 'invalid_area' };
 
-async function assertOwnedActiveAreas(
+async function assertHabitAreas(
   userId: string,
   areaIds: string[],
+  options: { allowArchivedIds?: string[] } = {},
 ): Promise<boolean> {
-  for (const areaId of areaIds) {
-    const area = await getArea(userId, areaId);
-    if (!area || area.archivedAt !== null) return false;
-  }
-  return true;
+  const unique = [...new Set(areaIds)];
+  if (unique.length === 0) return false;
+
+  const allowedArchived = new Set(options.allowArchivedIds ?? []);
+  const rows = await db
+    .select({ id: areas.id, archivedAt: areas.archivedAt })
+    .from(areas)
+    .where(and(eq(areas.userId, userId), inArray(areas.id, unique)));
+
+  if (rows.length !== unique.length) return false;
+
+  return rows.every(
+    (row) =>
+      row.archivedAt === null || allowedArchived.has(row.id),
+  );
 }
 
 async function loadAreaIds(habitIds: string[]): Promise<Map<string, string[]>> {
@@ -87,10 +97,7 @@ export async function createHabit(
   userId: string,
   input: HabitInput,
 ): Promise<HabitWriteResult> {
-  if (
-    input.areaIds.length === 0 ||
-    !(await assertOwnedActiveAreas(userId, input.areaIds))
-  ) {
+  if (!(await assertHabitAreas(userId, input.areaIds))) {
     return { ok: false, reason: 'invalid_area' };
   }
 
@@ -122,15 +129,16 @@ export async function updateHabit(
   id: string,
   input: HabitInput,
 ): Promise<HabitWriteResult> {
+  const existing = await getHabit(userId, id);
+  if (!existing) return { ok: false, reason: 'not_found' };
+
   if (
-    input.areaIds.length === 0 ||
-    !(await assertOwnedActiveAreas(userId, input.areaIds))
+    !(await assertHabitAreas(userId, input.areaIds, {
+      allowArchivedIds: existing.areaIds,
+    }))
   ) {
     return { ok: false, reason: 'invalid_area' };
   }
-
-  const existing = await getHabit(userId, id);
-  if (!existing) return { ok: false, reason: 'not_found' };
 
   const update = db
     .update(habits)
@@ -144,9 +152,7 @@ export async function updateHabit(
       updatedAt: sql`now()`,
     })
     .where(ownedBy(habits, userId, id));
-  const clearAreas = db
-    .delete(habitAreas)
-    .where(eq(habitAreas.habitId, id));
+  const clearAreas = db.delete(habitAreas).where(eq(habitAreas.habitId, id));
   const insertAreas = db.insert(habitAreas).values(
     input.areaIds.map((areaId) => ({ habitId: id, areaId })),
   );
@@ -166,9 +172,7 @@ export async function archiveHabit(
   const [item] = await db
     .update(habits)
     .set({ archivedAt: sql`now()`, updatedAt: sql`now()` })
-    .where(
-      and(ownedBy(habits, userId, id), isNull(habits.archivedAt)),
-    )
+    .where(and(ownedBy(habits, userId, id), isNull(habits.archivedAt)))
     .returning({ id: habits.id });
   return Boolean(item);
 }
@@ -197,6 +201,7 @@ export async function listHabitsForDate(
 
   return active.filter((habit) => {
     if (habit.frequencyKind === 'daily') return true;
-    return (habit.weekdays ?? []).includes(isoWeekday);
+    const days = (habit.weekdays ?? []).map(Number);
+    return days.includes(isoWeekday);
   });
 }

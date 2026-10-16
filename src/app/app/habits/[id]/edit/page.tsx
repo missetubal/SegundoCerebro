@@ -34,7 +34,8 @@ async function EditHabitContent({
   const habit = await getHabit(userId, id);
   if (!habit) notFound();
 
-  const { active: areas } = await listAreas(userId);
+  const { active, archived } = await listAreas(userId);
+  const areaOptions = areaOptionsForHabit(active, archived, habit.areaIds);
 
   return (
     <>
@@ -47,13 +48,33 @@ async function EditHabitContent({
       </header>
       <HabitForm
         action={updateHabitAction}
-        areas={areas.map((area) => ({ id: area.id, name: area.name }))}
+        areas={areaOptions}
         initial={toFormValues(habit)}
         submitLabel='Salvar'
         cancelHref='/app/habits'
       />
     </>
   );
+}
+
+function areaOptionsForHabit(
+  active: Array<{ id: string; name: string }>,
+  archived: Array<{ id: string; name: string }>,
+  linkedIds: string[],
+) {
+  const options = active.map((area) => ({ id: area.id, name: area.name }));
+  const activeIds = new Set(options.map((area) => area.id));
+  for (const id of linkedIds) {
+    if (activeIds.has(id)) continue;
+    const archivedArea = archived.find((area) => area.id === id);
+    if (archivedArea) {
+      options.push({
+        id: archivedArea.id,
+        name: `${archivedArea.name} (arquivada)`,
+      });
+    }
+  }
+  return options;
 }
 
 function toFormValues(habit: HabitWithAreas) {

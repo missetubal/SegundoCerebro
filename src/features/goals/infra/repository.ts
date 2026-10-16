@@ -1,9 +1,14 @@
 import 'server-only';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { getArea } from '@/features/areas/server';
+import { getArea } from '@/features/areas/queries';
 import { db, ownedBy, deleteOwned } from '@/shared/db';
 import { goals, horizons, nextSteps } from '@/shared/db';
-import type { GoalInput, GoalStatus, NextStepInput } from '../domain';
+import {
+  parseGoalStatus,
+  type GoalInput,
+  type GoalStatus,
+  type NextStepInput,
+} from '../domain';
 
 export type Goal = typeof goals.$inferSelect;
 export type NextStep = typeof nextSteps.$inferSelect;
@@ -19,6 +24,11 @@ export type NextStepWriteResult =
   | { ok: true; item: NextStep }
   | { ok: false; reason: 'not_found' };
 
+export type OpenNextStep = NextStep & {
+  goalTitle: string;
+  primaryAreaId: string;
+};
+
 async function getOwnedHorizon(userId: string, id: string) {
   const [horizon] = await db
     .select()
@@ -31,12 +41,23 @@ async function assertGoalLinks(
   userId: string,
   primaryAreaId: string,
   horizonId: string,
+  options: { allowArchivedAreaId?: string } = {},
 ): Promise<'invalid_area' | 'invalid_horizon' | null> {
   const area = await getArea(userId, primaryAreaId);
-  if (!area || area.archivedAt !== null) return 'invalid_area';
+  if (!area) return 'invalid_area';
+  if (
+    area.archivedAt !== null &&
+    area.id !== options.allowArchivedAreaId
+  ) {
+    return 'invalid_area';
+  }
   const horizon = await getOwnedHorizon(userId, horizonId);
   if (!horizon) return 'invalid_horizon';
   return null;
+}
+
+function withParsedStatus(goal: Goal): Goal {
+  return { ...goal, status: parseGoalStatus(goal.status) };
 }
 
 export async function listGoals(userId: string): Promise<{
@@ -44,11 +65,13 @@ export async function listGoals(userId: string): Promise<{
   completed: Goal[];
   archived: Goal[];
 }> {
-  const rows = await db
-    .select()
-    .from(goals)
-    .where(eq(goals.userId, userId))
-    .orderBy(asc(goals.createdAt), asc(goals.id));
+  const rows = (
+    await db
+      .select()
+      .from(goals)
+      .where(eq(goals.userId, userId))
+      .orderBy(asc(goals.createdAt), asc(goals.id))
+  ).map(withParsedStatus);
 
   return {
     active: rows.filter((goal) => goal.status === 'active'),
@@ -62,7 +85,7 @@ export async function getGoal(
   id: string,
 ): Promise<Goal | null> {
   const [goal] = await db.select().from(goals).where(ownedBy(goals, userId, id));
-  return goal ?? null;
+  return goal ? withParsedStatus(goal) : null;
 }
 
 export async function createGoal(
@@ -89,7 +112,9 @@ export async function createGoal(
     })
     .returning();
 
-  return item ? { ok: true, item } : { ok: false, reason: 'not_found' };
+  return item
+    ? { ok: true, item: withParsedStatus(item) }
+    : { ok: false, reason: 'not_found' };
 }
 
 export async function updateGoal(
@@ -97,10 +122,14 @@ export async function updateGoal(
   id: string,
   input: GoalInput,
 ): Promise<GoalWriteResult> {
+  const existing = await getGoal(userId, id);
+  if (!existing) return { ok: false, reason: 'not_found' };
+
   const linkError = await assertGoalLinks(
     userId,
     input.primaryAreaId,
     input.horizonId,
+    { allowArchivedAreaId: existing.primaryAreaId },
   );
   if (linkError) return { ok: false, reason: linkError };
 
@@ -118,7 +147,9 @@ export async function updateGoal(
     .where(ownedBy(goals, userId, id))
     .returning();
 
-  return item ? { ok: true, item } : { ok: false, reason: 'not_found' };
+  return item
+    ? { ok: true, item: withParsedStatus(item) }
+    : { ok: false, reason: 'not_found' };
 }
 
 export async function setGoalStatus(
@@ -147,6 +178,36 @@ export async function listNextSteps(
     .from(nextSteps)
     .where(and(eq(nextSteps.userId, userId), eq(nextSteps.goalId, goalId)))
     .orderBy(asc(nextSteps.createdAt), asc(nextSteps.id));
+}
+
+/** Open next steps across the user's goals (single query for home dashboard). */
+export async function listOpenNextSteps(
+  userId: string,
+): Promise<OpenNextStep[]> {
+  const rows = await db
+    .select({
+      id: nextSteps.id,
+      userId: nextSteps.userId,
+      goalId: nextSteps.goalId,
+      title: nextSteps.title,
+      status: nextSteps.status,
+      createdAt: nextSteps.createdAt,
+      updatedAt: nextSteps.updatedAt,
+      goalTitle: goals.title,
+      primaryAreaId: goals.primaryAreaId,
+    })
+    .from(nextSteps)
+    .innerJoin(goals, eq(nextSteps.goalId, goals.id))
+    .where(
+      and(
+        eq(nextSteps.userId, userId),
+        eq(goals.userId, userId),
+        eq(nextSteps.status, 'open'),
+      ),
+    )
+    .orderBy(asc(nextSteps.createdAt), asc(nextSteps.id));
+
+  return rows;
 }
 
 export async function createNextStep(
