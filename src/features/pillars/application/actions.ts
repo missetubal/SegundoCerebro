@@ -18,7 +18,7 @@ import {
 } from '../infra';
 
 const DUPLICATE_NAME_MESSAGE =
-  'Já existe um pilar com esse nome. Se ele estiver arquivado, você pode desarquivá-lo.';
+  'Já existe uma área com esse nome. Se ela estiver arquivada, você pode desarquivá-la.';
 
 function parsePillarInput(formData: FormData) {
   return pillarInputSchema.safeParse({

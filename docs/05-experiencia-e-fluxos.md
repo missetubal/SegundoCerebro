@@ -16,7 +16,7 @@ A estrutura final de navegação ainda deve ser validada com wireframes. Uma pro
 
 - Início / Dashboard;
 - Check-in;
-- Pilares;
+- Áreas;
 - Metas;
 - Hábitos;
 - Revisões;
@@ -28,12 +28,12 @@ A estrutura final de navegação ainda deve ser validada com wireframes. Uma pro
 1. Criar conta e autenticar.
 2. Definir fuso horário ou confirmar o detectado.
 3. Escolher template minimalista ou detalhado.
-4. Selecionar pilares sugeridos ou criar pilares próprios.
+4. Selecionar áreas sugeridas ou criar áreas próprias.
 5. Criar metas e hábitos — todos opcionais no onboarding.
 6. Escolher componentes prioritários do dashboard.
 7. Configurar lembretes por e-mail, se desejar.
 
-O onboarding não deve obrigar o usuário a cadastrar todos os pilares, metas ou hábitos antes de usar o sistema.
+O onboarding não deve obrigar o usuário a cadastrar todos as áreas, metas ou hábitos antes de usar o sistema.
 
 ## 4. Fluxo de check-in rápido
 
@@ -74,7 +74,7 @@ A interface deve indicar claramente que se está editando uma data passada.
 1. Inserir o nome do hábito.
 2. Selecionar tipo de acompanhamento.
 3. Definir frequência.
-4. Relacionar a um ou mais pilares, se desejar.
+4. Relacionar a uma ou mais áreas, se desejar.
 5. Relacionar a uma meta, se desejar.
 6. Configurar unidade e meta numérica, quando aplicável.
 7. Configurar lembrete, opcionalmente.
@@ -130,7 +130,7 @@ O usuário pode selecionar os componentes que deseja destacar. Exemplos de compo
 - Progresso dos hábitos por período;
 - Metas ativas;
 - Próximos passos;
-- Pilares;
+- Áreas;
 - Revisão pendente;
 - Gráficos escolhidos pelo usuário.
 

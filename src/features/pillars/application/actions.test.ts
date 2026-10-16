@@ -72,7 +72,7 @@ describe('createPillarAction', () => {
 
     const state = await createPillarAction(IDLE_STATE, formWith({ name: '  ' }));
 
-    expect(state).toEqual({ status: 'error', message: 'Dê um nome ao pilar.' });
+    expect(state).toEqual({ status: 'error', message: 'Dê um nome à área.' });
     expect((await listPillars(userId)).active).toEqual([]);
   });
 
@@ -83,7 +83,7 @@ describe('createPillarAction', () => {
 
     const state = await createPillarAction(IDLE_STATE, formWith({ name: 'saúde' }));
 
-    expect(state.status === 'error' && state.message).toMatch(/Já existe um pilar/);
+    expect(state.status === 'error' && state.message).toMatch(/Já existe uma área/);
   });
 
   it('ignores a userId sent by the client', async () => {

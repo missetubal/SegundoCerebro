@@ -11,12 +11,12 @@ export default function PillarNotFound() {
         <span className='inline-flex size-10 items-center justify-center rounded-full bg-bg-app text-muted'>
           <Compass className='size-5' aria-hidden />
         </span>
-        <h1 className='font-medium'>Pilar não encontrado</h1>
+        <h1 className='font-medium'>Área não encontrada</h1>
         <p className='text-sm text-muted'>
-          Ele pode ter sido excluído ou o endereço está incompleto.
+          Ela pode ter sido excluída ou o endereço está incompleto.
         </p>
         <Link href='/app/pillars' className={primaryButton}>
-          Voltar para pilares
+          Voltar para áreas
         </Link>
       </section>
     </main>

@@ -16,7 +16,9 @@
 - `GET /api/preferences`
 - `PATCH /api/preferences`
 
-### Pilares
+### Áreas
+
+> UI: **Áreas**. Paths abaixo ainda usam `pillars` até o rename técnico (camada B).
 
 - `GET /api/pillars`
 - `POST /api/pillars`

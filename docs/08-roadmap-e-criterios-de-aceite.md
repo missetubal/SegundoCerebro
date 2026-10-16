@@ -15,12 +15,12 @@
 - Preferências do usuário;
 - Modelo de dados com `user_id`;
 - Testes de isolamento de dados;
-- Cadastro e edição de pilares.
+- Cadastro e edição de áreas.
 
 ### Critérios de aceite
 
 - Usuário autenticado só consegue acessar os próprios dados;
-- Pilares podem ser criados, editados e arquivados;
+- Áreas podem ser criados, editados e arquivados;
 - Fuso horário e template global podem ser configurados.
 
 ## Fase 2 — Metas e hábitos
@@ -29,7 +29,7 @@
 - Criar próximos passos;
 - Criar hábitos personalizados;
 - Configurar frequências e tipos de acompanhamento;
-- Associar hábitos a pilares e metas.
+- Associar hábitos a áreas e metas.
 
 ### Critérios de aceite
 
@@ -94,7 +94,7 @@ Possibilidades a avaliar:
 - Aplicação mobile;
 - RAG sobre registros pessoais;
 - Insights com IA;
-- Visualizações de relações entre pilares;
+- Visualizações de relações entre áreas;
 - Mais canais de notificação;
 - Recursos para produto multiusuário.
 
@@ -109,7 +109,7 @@ Possibilidades a avaliar:
 
 ### Testes de integração
 
-- CRUD de pilares, metas e hábitos;
+- CRUD de áreas, metas e hábitos;
 - Registro retroativo;
 - Exportação;
 - Envio e registro de notificações.

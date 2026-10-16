@@ -39,7 +39,7 @@ Campos sugeridos:
 - `created_at`
 - `updated_at`
 
-### Pillar
+### Area (UI: Área; código/DB hoje: `pillar`)
 
 Campos sugeridos:
 
@@ -78,7 +78,7 @@ Campos sugeridos:
 
 ### GoalPillar
 
-Relação opcional entre uma meta e pilares adicionais.
+Relação opcional entre uma meta e áreas adicionais.
 
 Campos sugeridos:
 
@@ -125,7 +125,7 @@ Campos sugeridos:
 
 ### HabitPillar
 
-Relação entre hábito e um ou mais pilares.
+Relação entre hábito e uma ou mais áreas.
 
 Campos sugeridos:
 

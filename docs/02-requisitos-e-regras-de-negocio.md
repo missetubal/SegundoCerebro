@@ -25,23 +25,23 @@ O usuário pode configurar preferências, incluindo:
 - Horário de lembrete;
 - Preferências de dashboard.
 
-## 3. Pilares
+## 3. Áreas
 
-### RF-010 — Criar pilar (P0)
+### RF-010 — Criar área (P0)
 
-O usuário pode criar um pilar com nome e, opcionalmente, descrição, cor, ícone e posição de exibição.
+O usuário pode criar uma área com nome e, opcionalmente, descrição, cor, ícone e posição de exibição.
 
-### RF-011 — Editar pilar (P0)
+### RF-011 — Editar área (P0)
 
-O usuário pode alterar os dados de um pilar.
+O usuário pode alterar os dados de uma área.
 
-### RF-012 — Reordenar pilares (P1)
+### RF-012 — Reordenar áreas (P1)
 
-O usuário pode definir a ordem em que os pilares aparecem.
+O usuário pode definir a ordem em que as áreas aparecem.
 
-### RF-013 — Arquivar ou excluir pilar (P0)
+### RF-013 — Arquivar ou excluir área (P0)
 
-O usuário pode arquivar um pilar para removê-lo das telas principais sem apagar seu histórico.
+O usuário pode arquivar uma área para removê-la das telas principais sem apagar seu histórico.
 
 A exclusão definitiva deve tratar os dados dependentes de forma explícita e apresentar confirmação.
 
@@ -53,8 +53,8 @@ Cada meta deve poder conter:
 
 - Título;
 - Descrição;
-- Pilar principal;
-- Pilares relacionados, opcionalmente;
+- Área principal;
+- Áreas relacionados, opcionalmente;
 - Horizonte ou classificação temporal definida pelo usuário;
 - Data inicial e data-alvo, opcionais;
 - Estado;
@@ -83,7 +83,7 @@ Campos configuráveis podem incluir:
 
 - Nome;
 - Descrição;
-- Pilar ou pilares;
+- Área ou áreas;
 - Meta relacionada, opcional;
 - Tipo de acompanhamento;
 - Frequência;
@@ -188,7 +188,7 @@ Cada check-in pertence a uma data no fuso horário do usuário. O usuário pode 
 
 ### RF-051 — Registro geral do dia (P0)
 
-O check-in inclui um campo livre geral para o dia. O modelo inicial não exige um texto separado para cada pilar.
+O check-in inclui um campo livre geral para o dia. O modelo inicial não exige um texto separado para cada área.
 
 ### RF-052 — Check-in de hábitos (P0)
 
@@ -234,9 +234,9 @@ As perguntas e a definição de semanas, meses e limites de período devem ser e
 
 O usuário pode escolher quais componentes são mais importantes e devem aparecer em destaque.
 
-### RF-071 — Visualizações por pilar (P0)
+### RF-071 — Visualizações por área (P0)
 
-O usuário pode consultar metas, hábitos e registros associados a um pilar.
+O usuário pode consultar metas, hábitos e registros associados a uma área.
 
 ### RF-072 — Histórico e gráficos (P1)
 
@@ -246,11 +246,11 @@ Toda visualização deve indicar período, unidade, origem dos dados e limitaç�
 
 ### RF-073 — Tags e relações transversais (P1)
 
-O usuário pode utilizar tags para relacionar registros de diferentes pilares.
+O usuário pode utilizar tags para relacionar registros de diferentes áreas.
 
-### RF-074 — Correlações entre pilares (P2)
+### RF-074 — Correlações entre áreas (P2)
 
-O sistema poderá apresentar relações entre dados de pilares diferentes. Essas relações devem ser descritas como correlações observadas, não como causalidade comprovada.
+O sistema poderá apresentar relações entre dados de áreas diferentes. Essas relações devem ser descritas como correlações observadas, não como causalidade comprovada.
 
 ## 10. Notificações
 
@@ -293,6 +293,6 @@ O fluxo de exclusão deve explicar quais dados serão removidos, quais podem per
 2. Registros retroativos devem manter a data de referência e, quando necessário, o momento em que foram criados ou alterados.
 3. Valores quantitativos devem armazenar unidade.
 4. Hábitos arquivados não devem aparecer como ativos, mas o histórico deve continuar consultável.
-5. Pilares, metas e hábitos devem pertencer a um usuário.
+5. Áreas, metas e hábitos devem pertencer a um usuário.
 6. A ausência de um registro não deve ser interpretada automaticamente como “não realizado”.
 7. A configuração padrão não deve impedir a personalização posterior.

@@ -53,7 +53,7 @@ export function PillarForm({
 
       <div className='flex items-center gap-3'>
         <PillarTile color={color || null} icon={icon || null} size='lg' />
-        <span className='text-lg font-medium'>{name.trim() || 'Novo pilar'}</span>
+        <span className='text-lg font-medium'>{name.trim() || 'Nova área'}</span>
       </div>
 
       <div className='flex flex-col gap-2'>

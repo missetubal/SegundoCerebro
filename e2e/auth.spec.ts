@@ -4,7 +4,7 @@ import { e2eCredentials, signIn } from './helpers/auth';
 test.describe('auth', () => {
   test('signs in with email and password and reaches /app', async ({ page }) => {
     await signIn(page);
-    await expect(page.getByRole('link', { name: 'Pilares' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Áreas' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Horizontes' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Preferências' })).toBeVisible();
   });
