@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { getPreferences } from '@/db/preferences';
-import { requireUserId } from '@/lib/session';
-import { PreferencesForm } from './preferences-form';
+import { getPreferences } from '@/features/preferences/server';
+import { requireUserId } from '@/features/auth/server';
+import { PreferencesForm } from '@/features/preferences';
 
 export default function PreferencesPage() {
   return (

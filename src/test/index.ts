@@ -1,0 +1,1 @@
+export { createUserFixtures } from './fixtures';

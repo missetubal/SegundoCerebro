@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { signIn } from '@/auth';
-import { secondaryButton } from '@/components/ui';
-import { PasswordSignInForm } from './password-sign-in-form';
+import { signIn } from '@/features/auth/server';
+import { PasswordSignInForm } from '@/features/auth';
+import { secondaryButton } from '@/shared/ui';
 
 export default function SignInPage({ searchParams }: PageProps<'/signin'>) {
   return (

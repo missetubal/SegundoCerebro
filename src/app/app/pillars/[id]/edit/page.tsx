@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { eyebrow } from '@/components/ui';
-import { getPillar } from '@/db/pillars';
-import { requireUserId } from '@/lib/session';
-import { updatePillarAction } from '../../actions';
-import { PillarForm } from '../../pillar-form';
+import { eyebrow } from '@/shared/ui';
+import { getPillar } from '@/features/pillars/server';
+import { requireUserId } from '@/features/auth/server';
+import { updatePillarAction } from '@/features/pillars/server';
+import { PillarForm } from '@/features/pillars';
 
 export default function EditPillarPage({
   params,
