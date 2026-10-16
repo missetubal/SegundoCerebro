@@ -13,14 +13,22 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              group: ["@/features/*/*", "!@/features/*/server"],
+              group: [
+                "@/features/*/*",
+                "!@/features/*/server",
+                "!@/features/*/queries",
+              ],
               message:
-                "Importe apenas pela API pública: @/features/<feature> ou @/features/<feature>/server",
+                "Importe apenas pela API pública: @/features/<feature>, @/features/<feature>/server ou @/features/<feature>/queries",
             },
             {
-              group: ["@/features/*/**", "!@/features/*/server"],
+              group: [
+                "@/features/*/**",
+                "!@/features/*/server",
+                "!@/features/*/queries",
+              ],
               message:
-                "Importe apenas pela API pública: @/features/<feature> ou @/features/<feature>/server",
+                "Importe apenas pela API pública: @/features/<feature>, @/features/<feature>/server ou @/features/<feature>/queries",
             },
           ],
         },

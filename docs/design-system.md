@@ -1,6 +1,13 @@
 # Design System — Segundo Cérebro
 
-Fonte: Figma [Segundo Cérebro → Design System → Foundations](https://www.figma.com/design/fPdqla2Vm3DvuCRVCJb0tY/Segundo-C%C3%A9rebro?node-id=22-3).
+Fonte (tokens): Figma [Segundo Cérebro → Design System → Foundations](https://www.figma.com/design/fPdqla2Vm3DvuCRVCJb0tY/Segundo-C%C3%A9rebro?node-id=22-3) (`22:3`).
+
+Fonte (telas / UI a implementar): Figma [Segundo Cérebro → node `21:362`](https://www.figma.com/design/fPdqla2Vm3DvuCRVCJb0tY/Segundo-C%C3%A9rebro?node-id=21-362) — base visual para shell, metas, hábitos e demais superfícies `/app`. Novas telas MUST alinhar a este frame (layout, tipografia, densidade) reutilizando os tokens Foundations abaixo.
+
+Capturas locais (quando MCP Figma estiver limitado):
+- `docs/figma/foundations.png` — tokens (surfaces, pastéis, buttons, KPI tile, card)
+- `docs/figma/inicio.png` — Início / dashboard
+- `docs/figma/check-in.png` — Check-in
 
 Documento de referência para tokens e componentes base. Nomes de token em inglês (código); copy de UI em pt-BR.
 
@@ -26,7 +33,7 @@ Documento de referência para tokens e componentes base. Nomes de token em ingl�
 
 | Token | Hex | Uso |
 | --- | --- | --- |
-| `sky` | `#EBF7FC` | KPI / área azul clara |
+| `sky` | `#E8F7FC` | KPI / área azul clara |
 | `mint` | `#E8F8F0` | KPI / área verde |
 | `peach` | `#FFF1E6` | KPI / área laranja |
 | `lilac` | `#F3EEFF` | KPI / área lilás |
@@ -91,6 +98,7 @@ Componentes compartilhados em `src/shared/ui/tokens.ts`: `primaryButton`, `secon
 - Tokens Foundations ligados em `globals.css` + `shared/ui/tokens.ts`.
 - Cores de área em `src/features/areas/presentation/style.ts` usam paleta Tailwind (`blue`, `amber`, …) — conjunto de domínio, não os pastéis de KPI do Foundations.
 - Shells `/app`, forms e neutro de área já usam tokens; paleta colorida de área (`blue`/`amber`/…) permanece domínio separado.
+- Frame de UI `21:362` + capturas em `docs/figma/` são a referência de composição. Shell (`AppSidebar`) e Início (`/app`) seguem o protótipo; check-in em `/app/check-in` é preview visual (persistência = Fatia 4).
 
 ## 8. Fora de escopo (ainda)
 

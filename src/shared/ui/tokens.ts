@@ -1,5 +1,5 @@
 export const primaryButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-navy disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-medium text-bg-card hover:bg-navy disabled:opacity-50';
 
 export const secondaryButton =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg-card px-4 py-2 text-sm font-medium text-ink hover:bg-bg-app disabled:opacity-50';
