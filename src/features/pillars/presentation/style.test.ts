@@ -13,7 +13,7 @@ describe('pillarColorStyle', () => {
 
   it('falls back to the neutral style for null or unknown colors', () => {
     expect(pillarColorStyle(null)).toEqual(pillarColorStyle('magenta'));
-    expect(pillarColorStyle(null).tile).toContain('bg-zinc-100');
+    expect(pillarColorStyle(null).tile).toContain('bg-bg-app');
   });
 });
 

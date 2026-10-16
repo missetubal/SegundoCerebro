@@ -29,7 +29,7 @@ export default function PillarsPage() {
         <div className='flex flex-col gap-1'>
           <span className={eyebrow}>Estrutura</span>
           <h1 className='text-3xl font-semibold'>Pilares</h1>
-          <p className='text-sm text-zinc-600 dark:text-zinc-400'>
+          <p className='text-sm text-muted'>
             As áreas da sua vida que você acompanha. Reordene, edite cores e
             ícones quando quiser.
           </p>
@@ -55,7 +55,7 @@ async function PillarsContent() {
       {active.length === 0 ? (
         <section className={`${card} flex flex-col items-center gap-3 p-8 text-center`}>
           <p className='font-medium'>Nenhum pilar ativo por aqui.</p>
-          <p className='text-sm text-zinc-600 dark:text-zinc-400'>
+          <p className='text-sm text-muted'>
             Comece pelas áreas que mais importam para você agora.
           </p>
           <Link href='/app/pillars/new' className={primaryButton}>
@@ -78,7 +78,7 @@ async function PillarsContent() {
 
       {archived.length > 0 && (
         <details className='group'>
-          <summary className='cursor-pointer text-sm font-medium text-zinc-600 dark:text-zinc-400'>
+          <summary className='cursor-pointer text-sm font-medium text-muted'>
             Arquivados ({archived.length})
           </summary>
           <ul className='mt-3 flex flex-col gap-3'>
@@ -99,7 +99,7 @@ function PillarSummary({ pillar }: { pillar: Pillar }) {
       <div className='min-w-0 flex-1'>
         <p className='truncate font-medium'>{pillar.name}</p>
         {pillar.description && (
-          <p className='truncate text-sm text-zinc-600 dark:text-zinc-400'>
+          <p className='truncate text-sm text-muted'>
             {pillar.description}
           </p>
         )}
@@ -129,7 +129,7 @@ function ActivePillarRow({
       <PillarSummary pillar={pillar} />
       <Link
         href={`/app/pillars/${pillar.id}`}
-        className='inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900'
+        className='inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-ink hover:bg-bg-app'
       >
         Abrir
         <ArrowUpRight className='size-4' aria-hidden />
@@ -160,7 +160,7 @@ function ArchivedPillarRow({ pillar }: { pillar: Pillar }) {
       <PillarSummary pillar={pillar} />
       <Link
         href={`/app/pillars/${pillar.id}`}
-        className='inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900'
+        className='inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm text-ink hover:bg-bg-app'
       >
         Abrir
         <ArrowUpRight className='size-4' aria-hidden />

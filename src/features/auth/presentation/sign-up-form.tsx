@@ -56,7 +56,7 @@ export function SignUpForm() {
           aria-describedby='password-hint'
           className={textInput}
         />
-        <span id='password-hint' className='text-sm text-zinc-600 dark:text-zinc-400'>
+        <span id='password-hint' className='text-sm text-muted'>
           De {PASSWORD_MIN} a {PASSWORD_MAX} caracteres.
         </span>
       </div>

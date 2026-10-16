@@ -73,7 +73,7 @@ export function PreferencesForm({ timezone, journalTemplate, timeZones }: Props)
       <div className='flex flex-col gap-1'>
         <span className='font-medium'>Template do check-in</span>
         <span>{journalTemplate === 'minimal' ? 'Minimalista' : journalTemplate}</span>
-        <span className='text-sm text-zinc-600 dark:text-zinc-400'>
+        <span className='text-sm text-muted'>
           O template detalhado chega numa próxima versão.
         </span>
       </div>

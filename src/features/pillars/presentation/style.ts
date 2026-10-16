@@ -72,8 +72,8 @@ const COLOR_STYLES: Record<PillarColor, ColorStyle> = {
 };
 
 const NEUTRAL_STYLE: ColorStyle = {
-  tile: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400',
-  swatch: 'bg-zinc-300 dark:bg-zinc-600',
+  tile: 'bg-bg-app text-muted',
+  swatch: 'bg-border',
 };
 
 const ICONS: Record<PillarIcon, LucideIcon> = {
