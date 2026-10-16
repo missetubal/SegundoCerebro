@@ -3,11 +3,22 @@ import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db, ownedBy } from '@/shared/db';
 import { areas, habitAreas, habits } from '@/shared/db';
 import { isoWeekdayFromDateYmd } from '@/shared/lib/calendar';
-import type { HabitInput } from '../domain';
+import {
+  isHabitDueOnIsoWeekday,
+  parseFrequencyKind,
+  parseTrackingType,
+  type FrequencyKind,
+  type HabitInput,
+  type TrackingType,
+} from '../domain';
 
 export type Habit = typeof habits.$inferSelect;
 
-export type HabitWithAreas = Habit & { areaIds: string[] };
+export type HabitWithAreas = Omit<Habit, 'trackingType' | 'frequencyKind'> & {
+  trackingType: TrackingType;
+  frequencyKind: FrequencyKind;
+  areaIds: string[];
+};
 
 export type HabitWriteResult =
   | { ok: true; item: HabitWithAreas }
@@ -53,7 +64,12 @@ async function loadAreaIds(habitIds: string[]): Promise<Map<string, string[]>> {
 }
 
 function withAreas(habit: Habit, areaIds: string[]): HabitWithAreas {
-  return { ...habit, areaIds };
+  return {
+    ...habit,
+    trackingType: parseTrackingType(habit.trackingType),
+    frequencyKind: parseFrequencyKind(habit.frequencyKind),
+    areaIds,
+  };
 }
 
 export async function listHabits(userId: string): Promise<{
@@ -199,9 +215,5 @@ export async function listHabitsForDate(
   const isoWeekday = isoWeekdayFromDateYmd(dateYmd);
   const { active } = await listHabits(userId);
 
-  return active.filter((habit) => {
-    if (habit.frequencyKind === 'daily') return true;
-    const days = (habit.weekdays ?? []).map(Number);
-    return days.includes(isoWeekday);
-  });
+  return active.filter((habit) => isHabitDueOnIsoWeekday(habit, isoWeekday));
 }

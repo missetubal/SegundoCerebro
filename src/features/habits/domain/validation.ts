@@ -138,3 +138,28 @@ export const habitInputSchema = z
   }));
 
 export type HabitInput = z.output<typeof habitInputSchema>;
+
+const trackingTypeSchema = z.enum(TRACKING_TYPES);
+const frequencyKindSchema = z.enum(FREQUENCY_KINDS);
+
+/** Parses a stored tracking type; unknown values fall back to `completion`. */
+export function parseTrackingType(value: unknown): TrackingType {
+  const result = trackingTypeSchema.safeParse(value);
+  return result.success ? result.data : 'completion';
+}
+
+/** Parses a stored frequency kind; unknown values fall back to `daily`. */
+export function parseFrequencyKind(value: unknown): FrequencyKind {
+  const result = frequencyKindSchema.safeParse(value);
+  return result.success ? result.data : 'daily';
+}
+
+/** Whether an active habit applies on the given ISO weekday (1=Mon … 7=Sun). */
+export function isHabitDueOnIsoWeekday(
+  habit: { frequencyKind: string; weekdays: number[] | null },
+  isoWeekday: number,
+): boolean {
+  if (habit.frequencyKind === 'daily') return true;
+  const days = (habit.weekdays ?? []).map(Number);
+  return days.includes(isoWeekday);
+}

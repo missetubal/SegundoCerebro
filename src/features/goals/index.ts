@@ -1,5 +1,14 @@
 /** Client-safe public API. Server: `@/features/goals/server` */
-export { GoalForm, NextStepForm, type GoalFormOption } from './presentation';
+export {
+  ActiveGoalsCard,
+  GoalForm,
+  NextStepForm,
+  NextStepsCard,
+  type ActiveGoalItem,
+  type GoalFormOption,
+  type HorizonOption,
+  type NextStepCardItem,
+} from './presentation';
 export {
   GOAL_STATUSES,
   GOAL_TITLE_MAX,

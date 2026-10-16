@@ -1,5 +1,10 @@
 /** Client-safe public API. Server: `@/features/habits/server` */
-export { HabitForm, type HabitFormAreaOption } from './presentation';
+export {
+  HabitForm,
+  HabitsTodayCard,
+  type HabitFormAreaOption,
+  type HabitTodayItem,
+} from './presentation';
 export {
   FREQUENCY_KINDS,
   HABIT_NAME_MAX,
@@ -7,6 +12,9 @@ export {
   ISO_WEEKDAYS,
   TRACKING_TYPES,
   habitInputSchema,
+  isHabitDueOnIsoWeekday,
+  parseFrequencyKind,
+  parseTrackingType,
   type FrequencyKind,
   type HabitInput,
   type IsoWeekday,

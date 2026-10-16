@@ -1,11 +1,14 @@
 /** Client-safe public API. Server: `@/features/areas/server` */
 export {
   AreaForm,
+  AreaSummaryCard,
   AreaTile,
   DEFAULT_AREA_ICON,
   areaColorStyle,
   areaIcon,
   renderAreaIcon,
+  type AreaGoalCountItem,
+  type AreaSummaryItem,
 } from './presentation';
 export {
   isAreaColor,

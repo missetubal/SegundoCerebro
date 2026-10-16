@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { habitInputSchema } from './validation';
+import {
+  habitInputSchema,
+  isHabitDueOnIsoWeekday,
+  parseFrequencyKind,
+  parseTrackingType,
+} from './validation';
 
 describe('habitInputSchema', () => {
   it('accepts a completion habit like Meditar', () => {
@@ -102,5 +107,31 @@ describe('habitInputSchema', () => {
       areaIds: ['area-1'],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('parseTrackingType and parseFrequencyKind', () => {
+  it('accepts known values and falls back for unknown', () => {
+    expect(parseTrackingType('quantity')).toBe('quantity');
+    expect(parseTrackingType('nope')).toBe('completion');
+    expect(parseFrequencyKind('weekdays')).toBe('weekdays');
+    expect(parseFrequencyKind(null)).toBe('daily');
+  });
+});
+
+describe('isHabitDueOnIsoWeekday', () => {
+  it('includes daily habits every day', () => {
+    expect(
+      isHabitDueOnIsoWeekday(
+        { frequencyKind: 'daily', weekdays: null },
+        5,
+      ),
+    ).toBe(true);
+  });
+
+  it('matches weekday habits only on listed ISO days', () => {
+    const habit = { frequencyKind: 'weekdays', weekdays: [1, 3] };
+    expect(isHabitDueOnIsoWeekday(habit, 1)).toBe(true);
+    expect(isHabitDueOnIsoWeekday(habit, 2)).toBe(false);
   });
 });

@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { listAreas } from '@/features/areas/server';
 import { requireUserId } from '@/features/auth/server';
 import { HabitForm } from '@/features/habits';
-import type { FrequencyKind, TrackingType } from '@/features/habits';
 import {
   getHabit,
   updateHabitAction,
@@ -81,8 +80,8 @@ function toFormValues(habit: HabitWithAreas) {
   return {
     id: habit.id,
     name: habit.name,
-    trackingType: habit.trackingType as TrackingType,
-    frequencyKind: habit.frequencyKind as FrequencyKind,
+    trackingType: habit.trackingType,
+    frequencyKind: habit.frequencyKind,
     weekdays: habit.weekdays,
     targetValue: habit.targetValue,
     unit: habit.unit,
