@@ -23,7 +23,7 @@ function input(name: string, overrides: Partial<PillarInput> = {}): PillarInput 
 async function create(userId: string, name: string): Promise<Pillar> {
   const result = await createPillar(userId, input(name));
   if (!result.ok) throw new Error(`Could not create pillar ${name}`);
-  return result.pillar;
+  return result.item;
 }
 
 async function activeNames(userId: string): Promise<string[]> {
@@ -48,7 +48,7 @@ describe('createPillar and listPillars', () => {
       input('Carreira', { description: 'Trabalho', color: 'blue', icon: 'briefcase' }),
     );
 
-    expect(result.ok && result.pillar).toMatchObject({
+    expect(result.ok && result.item).toMatchObject({
       name: 'Carreira',
       description: 'Trabalho',
       color: 'blue',
@@ -92,8 +92,8 @@ describe('updatePillar', () => {
       input('Saúde e corpo', { color: 'emerald' }),
     );
 
-    expect(result.ok && result.pillar.color).toBe('emerald');
-    expect(result.ok && result.pillar.updatedAt.getTime()).toBeGreaterThanOrEqual(
+    expect(result.ok && result.item.color).toBe('emerald');
+    expect(result.ok && result.item.updatedAt.getTime()).toBeGreaterThanOrEqual(
       saude.updatedAt.getTime(),
     );
     expect(await activeNames(userId)).toEqual(['Carreira', 'Saúde e corpo', 'Lazer']);
@@ -107,9 +107,9 @@ describe('updatePillar', () => {
     );
     if (!created.ok) throw new Error('setup failed');
 
-    await updatePillar(userId, created.pillar.id, input('Casa'));
+    await updatePillar(userId, created.item.id, input('Casa'));
 
-    expect(await getPillar(userId, created.pillar.id)).toMatchObject({
+    expect(await getPillar(userId, created.item.id)).toMatchObject({
       color: null,
       icon: null,
     });

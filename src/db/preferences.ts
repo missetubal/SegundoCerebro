@@ -5,16 +5,24 @@ import { userPreferences } from '@/db/schema';
 
 export type Preferences = typeof userPreferences.$inferSelect;
 
-export async function getPreferences(userId: string): Promise<Preferences> {
-  await db
-    .insert(userPreferences)
-    .values({ userId })
-    .onConflictDoNothing({ target: userPreferences.userId });
-
+async function findPreferences(userId: string): Promise<Preferences | null> {
   const [preferences] = await db
     .select()
     .from(userPreferences)
     .where(eq(userPreferences.userId, userId));
+  return preferences ?? null;
+}
+
+export async function getPreferences(userId: string): Promise<Preferences> {
+  const existing = await findPreferences(userId);
+  if (existing) return existing;
+
+  const [created] = await db
+    .insert(userPreferences)
+    .values({ userId })
+    .onConflictDoNothing({ target: userPreferences.userId })
+    .returning();
+  const preferences = created ?? (await findPreferences(userId));
   if (!preferences) {
     throw new Error(`Preferences not found for user ${userId}`);
   }

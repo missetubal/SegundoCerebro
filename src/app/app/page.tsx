@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { auth, signOut } from '@/auth';
+import { secondaryButton } from '@/components/ui';
 
 export default function AppHome() {
   return (
@@ -27,7 +28,7 @@ export default function AppHome() {
           await signOut({ redirectTo: '/' });
         }}
       >
-        <button type='submit' className='rounded border px-4 py-2'>
+        <button type='submit' className={secondaryButton}>
           Sair
         </button>
       </form>

@@ -38,7 +38,7 @@ describe('updateTimezoneAction', () => {
       formWith({ timezone: 'Europe/Lisbon' }),
     );
 
-    expect(state).toEqual({ status: 'success', timezone: 'Europe/Lisbon' });
+    expect(state).toEqual({ status: 'success' });
     expect((await getPreferences(userId)).timezone).toBe('Europe/Lisbon');
   });
 

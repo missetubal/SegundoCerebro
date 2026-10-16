@@ -3,13 +3,14 @@
 import { refresh } from 'next/cache';
 import { z } from 'zod';
 import { updateTimezone } from '@/db/preferences';
+import {
+  ACTION_MESSAGES,
+  type ActionState,
+  errorState,
+  SUCCESS_STATE,
+} from '@/lib/action-state';
 import { requireUserId } from '@/lib/session';
 import { normalizeTimeZone } from '@/lib/timezone';
-
-export type UpdateTimezoneState =
-  | { status: 'idle' }
-  | { status: 'success'; timezone: string }
-  | { status: 'error'; message: string };
 
 const timezoneSchema = z
   .string()
@@ -24,27 +25,21 @@ const timezoneSchema = z
   });
 
 export async function updateTimezoneAction(
-  _prevState: UpdateTimezoneState,
+  _prevState: ActionState,
   formData: FormData,
-): Promise<UpdateTimezoneState> {
+): Promise<ActionState> {
   const userId = await requireUserId();
 
   const parsed = timezoneSchema.safeParse(formData.get('timezone'));
   if (!parsed.success) {
-    return {
-      status: 'error',
-      message: 'Não reconhecemos esse fuso horário. Escolha um da lista.',
-    };
+    return errorState('Não reconhecemos esse fuso horário. Escolha um da lista.');
   }
 
   try {
     await updateTimezone(userId, parsed.data);
   } catch {
-    return {
-      status: 'error',
-      message: 'Não foi possível salvar agora. Tente de novo em instantes.',
-    };
+    return errorState(ACTION_MESSAGES.unavailable);
   }
   refresh();
-  return { status: 'success', timezone: parsed.data };
+  return SUCCESS_STATE;
 }

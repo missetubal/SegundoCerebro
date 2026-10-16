@@ -2,14 +2,13 @@ import {
   Archive,
   ArchiveRestore,
   ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
   Pencil,
   Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ItemActionButton } from '@/components/item-action-button';
+import { MoveButtons } from '@/components/move-buttons';
 import { PillarTile } from '@/components/pillar-tile';
 import { card, eyebrow, iconButton, primaryButton } from '@/components/ui';
 import { listPillars, type Pillar } from '@/db/pillars';
@@ -120,28 +119,13 @@ function ActivePillarRow({
 }) {
   return (
     <li className={`${card} flex items-center gap-3 p-3`}>
-      <div className='flex flex-col'>
-        <ItemActionButton
-          action={movePillarAction}
-          id={pillar.id}
-          fields={{ direction: 'up' }}
-          label={`Mover ${pillar.name} para cima`}
-          disabled={isFirst}
-          className={iconButton}
-        >
-          <ChevronUp className='size-4' aria-hidden />
-        </ItemActionButton>
-        <ItemActionButton
-          action={movePillarAction}
-          id={pillar.id}
-          fields={{ direction: 'down' }}
-          label={`Mover ${pillar.name} para baixo`}
-          disabled={isLast}
-          className={iconButton}
-        >
-          <ChevronDown className='size-4' aria-hidden />
-        </ItemActionButton>
-      </div>
+      <MoveButtons
+        action={movePillarAction}
+        id={pillar.id}
+        name={pillar.name}
+        isFirst={isFirst}
+        isLast={isLast}
+      />
       <PillarSummary pillar={pillar} />
       <Link
         href={`/app/pillars/${pillar.id}`}

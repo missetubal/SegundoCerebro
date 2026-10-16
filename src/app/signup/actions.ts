@@ -1,9 +1,13 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { AuthError } from 'next-auth';
 import { signIn } from '@/auth';
-import { createPasswordUser, findPasswordUserByEmail } from '@/db/credentials';
+import { createPasswordUser } from '@/db/credentials';
+import { consumeRateLimits } from '@/db/rate-limits';
+import { clientIp } from '@/lib/client-ip';
 import { hashPassword } from '@/lib/password';
+import { signUpIpLimit } from '@/lib/rate-limit-policies';
 import { signUpSchema } from '@/lib/validation/credentials';
 
 export type SignUpState =
@@ -14,36 +18,12 @@ export type SignUpState =
       fields: { name: string; email: string };
     };
 
-const PASSWORD_ACCOUNT_EXISTS =
-  'Já existe uma conta com este e-mail. Entre com e-mail e senha.';
-const GOOGLE_ACCOUNT_EXISTS =
-  'Este e-mail já é usado por uma conta Google. Entre com Google.';
-
-function accountExistsMessage(passwordHash: string | null | undefined): string {
-  return passwordHash ? PASSWORD_ACCOUNT_EXISTS : GOOGLE_ACCOUNT_EXISTS;
-}
-
-async function registerAccount(input: {
-  name: string;
-  email: string;
-  password: string;
-}): Promise<string | null> {
-  const existing = await findPasswordUserByEmail(input.email);
-  if (existing) {
-    return accountExistsMessage(existing.passwordHash);
-  }
-
-  const result = await createPasswordUser({
-    name: input.name,
-    email: input.email,
-    passwordHash: await hashPassword(input.password),
-  });
-  if (result.status !== 'email_taken') return null;
-
-  // Unique-violation race: re-fetch and branch on passwordHash (same as L28–29).
-  const raced = await findPasswordUserByEmail(input.email);
-  return accountExistsMessage(raced?.passwordHash);
-}
+// Same text for password and Google accounts, so the form does not reveal how
+// an existing address signs in.
+const EMAIL_UNAVAILABLE =
+  'Não foi possível criar a conta com este e-mail. Se ele já é seu, entre com e-mail e senha ou com Google.';
+const TOO_MANY_ATTEMPTS =
+  'Muitas tentativas seguidas. Tente de novo em alguns minutos.';
 
 export async function signUpAction(
   _prevState: SignUpState,
@@ -69,8 +49,16 @@ export async function signUpAction(
   // someone else's address and block Google sign-in for that email until
   // verify-email ships. See PR #4 "Conhecidos".
   try {
-    const refusal = await registerAccount(parsed.data);
-    if (refusal) return fail(refusal);
+    const ip = clientIp(await headers());
+    if (!(await consumeRateLimits([signUpIpLimit(ip)]))) {
+      return fail(TOO_MANY_ATTEMPTS);
+    }
+    const result = await createPasswordUser({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      passwordHash: await hashPassword(parsed.data.password),
+    });
+    if (result.status === 'email_taken') return fail(EMAIL_UNAVAILABLE);
   } catch {
     return fail('Não foi possível criar a conta agora. Tente de novo em instantes.');
   }

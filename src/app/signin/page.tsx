@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { signIn } from '@/auth';
+import { secondaryButton } from '@/components/ui';
 import { PasswordSignInForm } from './password-sign-in-form';
 
 export default function SignInPage({ searchParams }: PageProps<'/signin'>) {
@@ -11,14 +12,14 @@ export default function SignInPage({ searchParams }: PageProps<'/signin'>) {
         <AuthErrorNotice searchParams={searchParams} />
       </Suspense>
       <PasswordSignInForm />
-      <p className='text-center text-sm opacity-70'>ou</p>
+      <p className='text-center text-sm text-zinc-600 dark:text-zinc-400'>ou</p>
       <form
         action={async () => {
           'use server';
           await signIn('google', { redirectTo: '/app' });
         }}
       >
-        <button type='submit' className='w-full rounded border px-4 py-2'>
+        <button type='submit' className={`${secondaryButton} w-full`}>
           Entrar com Google
         </button>
       </form>
@@ -44,7 +45,10 @@ async function AuthErrorNotice({
       : 'Não foi possível entrar. Tente de novo.';
 
   return (
-    <p role='alert' className='rounded border px-3 py-2 text-sm'>
+    <p
+      role='alert'
+      className='rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+    >
       {message}
     </p>
   );

@@ -1,8 +1,8 @@
-import { ChevronDown, ChevronUp, Trash } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { ItemActionButton } from '@/components/item-action-button';
+import { MoveButtons } from '@/components/move-buttons';
 import { card, eyebrow, iconButton } from '@/components/ui';
 import { type Horizon, listHorizons } from '@/db/horizons';
 import { requireUserId } from '@/lib/session';
@@ -71,28 +71,13 @@ function HorizonRow({
 }) {
   return (
     <li className={`${card} flex items-center gap-2 p-3`}>
-      <div className='flex flex-col'>
-        <ItemActionButton
-          action={moveHorizonAction}
-          id={horizon.id}
-          fields={{ direction: 'up' }}
-          label={`Mover ${horizon.name} para cima`}
-          disabled={isFirst}
-          className={iconButton}
-        >
-          <ChevronUp className='size-4' aria-hidden />
-        </ItemActionButton>
-        <ItemActionButton
-          action={moveHorizonAction}
-          id={horizon.id}
-          fields={{ direction: 'down' }}
-          label={`Mover ${horizon.name} para baixo`}
-          disabled={isLast}
-          className={iconButton}
-        >
-          <ChevronDown className='size-4' aria-hidden />
-        </ItemActionButton>
-      </div>
+      <MoveButtons
+        action={moveHorizonAction}
+        id={horizon.id}
+        name={horizon.name}
+        isFirst={isFirst}
+        isLast={isLast}
+      />
       <RenameHorizonForm key={horizon.name} id={horizon.id} name={horizon.name} />
       <ConfirmDeleteDialog
         action={deleteHorizonAction}

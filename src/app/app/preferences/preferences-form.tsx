@@ -1,15 +1,15 @@
 'use client';
 
 import { useActionState, useState, useSyncExternalStore } from 'react';
-import { updateTimezoneAction, type UpdateTimezoneState } from './actions';
+import { primaryButton, textInput } from '@/components/ui';
+import { IDLE_STATE } from '@/lib/action-state';
+import { updateTimezoneAction } from './actions';
 
 type Props = {
   timezone: string;
   journalTemplate: string;
   timeZones: string[];
 };
-
-const initialState: UpdateTimezoneState = { status: 'idle' };
 
 function subscribe() {
   return () => {};
@@ -30,7 +30,7 @@ function formatTimeZone(timeZone: string) {
 export function PreferencesForm({ timezone, journalTemplate, timeZones }: Props) {
   const [state, formAction, pending] = useActionState(
     updateTimezoneAction,
-    initialState,
+    IDLE_STATE,
   );
   const [selected, setSelected] = useState(timezone);
   const browserTimeZone = useBrowserTimeZone();
@@ -51,7 +51,7 @@ export function PreferencesForm({ timezone, journalTemplate, timeZones }: Props)
           name='timezone'
           value={selected}
           onChange={(event) => setSelected(event.target.value)}
-          className='rounded border px-3 py-2'
+          className={textInput}
         >
           {timeZones.map((timeZone) => (
             <option key={timeZone} value={timeZone}>
@@ -73,16 +73,12 @@ export function PreferencesForm({ timezone, journalTemplate, timeZones }: Props)
       <div className='flex flex-col gap-1'>
         <span className='font-medium'>Template do check-in</span>
         <span>{journalTemplate === 'minimal' ? 'Minimalista' : journalTemplate}</span>
-        <span className='text-sm opacity-70'>
+        <span className='text-sm text-zinc-600 dark:text-zinc-400'>
           O template detalhado chega numa próxima versão.
         </span>
       </div>
 
-      <button
-        type='submit'
-        disabled={pending}
-        className='rounded bg-black px-4 py-2 text-white disabled:opacity-50'
-      >
+      <button type='submit' disabled={pending} className={`${primaryButton} self-start`}>
         {pending ? 'Salvando…' : 'Salvar'}
       </button>
 

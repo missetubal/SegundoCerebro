@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { primaryButton, textInput } from '@/components/ui';
 import { signInWithPasswordAction, type SignInState } from './actions';
 
 const initialState: SignInState = { status: 'idle' };
@@ -23,7 +24,7 @@ export function PasswordSignInForm() {
           type='email'
           autoComplete='email'
           required
-          className='rounded border px-3 py-2'
+          className={textInput}
         />
       </div>
       <div className='flex flex-col gap-2'>
@@ -36,17 +37,13 @@ export function PasswordSignInForm() {
           type='password'
           autoComplete='current-password'
           required
-          className='rounded border px-3 py-2'
+          className={textInput}
         />
       </div>
-      <button
-        type='submit'
-        disabled={pending}
-        className='rounded bg-black px-4 py-2 text-white disabled:opacity-50'
-      >
+      <button type='submit' disabled={pending} className={primaryButton}>
         {pending ? 'Entrando…' : 'Entrar com e-mail'}
       </button>
-      <p aria-live='polite' className='text-sm'>
+      <p aria-live='polite' className='text-sm text-rose-700 dark:text-rose-300'>
         {state.status === 'error' && state.message}
       </p>
     </form>
