@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  # Auth.js needs a secret at build/runtime; CI value is not for production.
+  AUTH_SECRET: ci-only-auth-secret-min-32-chars-long
+  AUTH_GOOGLE_ID: 000000000000-ci.apps.googleusercontent.com
+  AUTH_GOOGLE_SECRET: ci-google-secret
+
+jobs:
+  quality:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+  verify:
+    name: Test and build
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve test database mode
+        id: db
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
+        run: |
+          if [ -n "$NEON_API_KEY" ] && [ -n "$NEON_PROJECT_ID" ]; then
+            echo "mode=neon" >> "$GITHUB_OUTPUT"
+          elif [ -n "$DATABASE_URL_TEST" ]; then
+            echo "mode=fixed" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Configure NEON_API_KEY + NEON_PROJECT_ID (vars), or DATABASE_URL_TEST"
+            exit 1
+          fi
+
+      - name: Neon branch expiry
+        if: steps.db.outputs.mode == 'neon'
+        run: echo "EXPIRES_AT=$(date -u -d '+6 hours' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      - name: Create Neon branch
+        if: steps.db.outputs.mode == 'neon'
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          parent_branch: ${{ vars.NEON_TEST_PARENT_BRANCH || 'main' }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          expires_at: ${{ env.EXPIRES_AT }}
+
+      - name: Write .env.test
+        env:
+          MODE: ${{ steps.db.outputs.mode }}
+          NEON_URL: ${{ steps.neon.outputs.db_url_pooled }}
+          FIXED_URL: ${{ secrets.DATABASE_URL_TEST }}
+        run: |
+          if [ "$MODE" = 'neon' ]; then
+            URL="$NEON_URL"
+          else
+            URL="$FIXED_URL"
+          fi
+          if [ -z "$URL" ]; then
+            echo '::error::Test DATABASE_URL is empty'
+            exit 1
+          fi
+          printf 'DATABASE_URL=%s\n' "$URL" > .env.test
+          echo "TEST_DATABASE_URL=$URL" >> "$GITHUB_ENV"
+
+      - name: Migrate test database
+        run: npm run db:migrate:test
+        env:
+          # Keep unset so env-guard does not treat it as the "real" DB.
+          DATABASE_URL: ''
+
+      - name: Unit tests
+        run: npm test
+        env:
+          DATABASE_URL: ''
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+
+      - name: Install Playwright Chromium
+        if: ${{ secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '' }}
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        if: ${{ secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '' }}
+        run: npm run test:e2e
+        env:
+          CI: true
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+          E2E_BASE_URL: http://localhost:3000
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+
+      - name: Upload Playwright report
+        if: ${{ failure() && secrets.E2E_EMAIL != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Delete Neon branch
+        if: ${{ always() && steps.db.outputs.mode == 'neon' && steps.neon.outputs.branch_id != '' }}
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ${{ steps.neon.outputs.branch_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}

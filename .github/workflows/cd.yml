@@ -1,0 +1,40 @@
+# App deploy: Vercel Git integration (preview on PR, production on main).
+# This workflow only applies Drizzle migrations to production — manual on purpose.
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type migrate to apply drizzle migrations to production DATABASE_URL'
+        required: true
+        type: string
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  migrate:
+    name: Migrate production database
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'migrate' }}
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
