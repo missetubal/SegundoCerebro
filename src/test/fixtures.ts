@@ -1,6 +1,6 @@
 import { inArray } from 'drizzle-orm';
-import { db } from '@/db';
-import { users } from '@/db/schema';
+import { db } from '@/shared/db';
+import { users } from '@/shared/db';
 
 export function createUserFixtures() {
   const createdIds: string[] = [];

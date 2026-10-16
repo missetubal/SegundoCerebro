@@ -1,6 +1,6 @@
 import { Compass } from 'lucide-react';
 import Link from 'next/link';
-import { card, primaryButton } from '@/components/ui';
+import { card, primaryButton } from '@/shared/ui';
 
 export default function PillarNotFound() {
   return (

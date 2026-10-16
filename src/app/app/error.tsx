@@ -3,7 +3,7 @@
 import { CloudOff } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
-import { card, primaryButton, secondaryButton } from '@/components/ui';
+import { card, primaryButton, secondaryButton } from '@/shared/ui';
 
 export default function AppError({
   error,

@@ -7,17 +7,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { ItemActionButton } from '@/components/item-action-button';
-import { MoveButtons } from '@/components/move-buttons';
-import { PillarTile } from '@/components/pillar-tile';
-import { card, eyebrow, iconButton, primaryButton } from '@/components/ui';
-import { listPillars, type Pillar } from '@/db/pillars';
-import { requireUserId } from '@/lib/session';
+import { ItemActionButton } from '@/shared/ui';
+import { MoveButtons } from '@/shared/ui';
+import { PillarTile } from '@/features/pillars';
+import { card, eyebrow, iconButton, primaryButton } from '@/shared/ui';
+import { listPillars, type Pillar } from '@/features/pillars/server';
+import { requireUserId } from '@/features/auth/server';
 import {
   archivePillarAction,
   movePillarAction,
   unarchivePillarAction,
-} from './actions';
+} from '@/features/pillars/server';
 
 export default function PillarsPage() {
   return (

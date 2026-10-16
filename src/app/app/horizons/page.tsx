@@ -1,13 +1,13 @@
 import { Trash } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { MoveButtons } from '@/components/move-buttons';
-import { card, eyebrow, iconButton } from '@/components/ui';
-import { type Horizon, listHorizons } from '@/db/horizons';
-import { requireUserId } from '@/lib/session';
-import { deleteHorizonAction, moveHorizonAction } from './actions';
-import { CreateHorizonForm, RenameHorizonForm } from './horizon-forms';
+import { ConfirmDeleteDialog } from '@/shared/ui';
+import { MoveButtons } from '@/shared/ui';
+import { card, eyebrow, iconButton } from '@/shared/ui';
+import { type Horizon, listHorizons } from '@/features/horizons/server';
+import { requireUserId } from '@/features/auth/server';
+import { deleteHorizonAction, moveHorizonAction } from '@/features/horizons/server';
+import { CreateHorizonForm, RenameHorizonForm } from '@/features/horizons';
 
 export default function HorizonsPage() {
   return (

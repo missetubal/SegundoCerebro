@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { auth, signOut } from '@/auth';
-import { secondaryButton } from '@/components/ui';
+import { auth, signOut } from '@/features/auth/server';
+import { secondaryButton } from '@/shared/ui';
 
 export default function AppHome() {
   return (

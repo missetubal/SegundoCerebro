@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { eyebrow } from '@/components/ui';
-import { requireUserId } from '@/lib/session';
-import { createPillarAction } from '../actions';
-import { PillarForm } from '../pillar-form';
+import { eyebrow } from '@/shared/ui';
+import { requireUserId } from '@/features/auth/server';
+import { createPillarAction } from '@/features/pillars/server';
+import { PillarForm } from '@/features/pillars';
 
 export default function NewPillarPage() {
   return (

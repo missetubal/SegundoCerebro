@@ -2,17 +2,17 @@ import { Archive, ArchiveRestore, ArrowLeft, Pencil, Trash } from 'lucide-react'
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { ItemActionButton } from '@/components/item-action-button';
-import { PillarTile } from '@/components/pillar-tile';
-import { card, dangerButton, eyebrow, secondaryButton } from '@/components/ui';
-import { getPillar } from '@/db/pillars';
-import { requireUserId } from '@/lib/session';
+import { ConfirmDeleteDialog } from '@/shared/ui';
+import { ItemActionButton } from '@/shared/ui';
+import { PillarTile } from '@/features/pillars';
+import { card, dangerButton, eyebrow, secondaryButton } from '@/shared/ui';
+import { getPillar } from '@/features/pillars/server';
+import { requireUserId } from '@/features/auth/server';
 import {
   archivePillarAction,
   deletePillarAction,
   unarchivePillarAction,
-} from '../actions';
+} from '@/features/pillars/server';
 
 export default function PillarPage({ params }: PageProps<'/app/pillars/[id]'>) {
   return (
