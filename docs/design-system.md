@@ -89,7 +89,7 @@ Componentes compartilhados em `src/shared/ui/tokens.ts`: `primaryButton`, `secon
 ## 7. Relação com o código atual
 
 - Tokens Foundations ligados em `globals.css` + `shared/ui/tokens.ts`.
-- Cores de área em `src/features/pillars/presentation/style.ts` usam paleta Tailwind (`blue`, `amber`, …) — conjunto de domínio, não os pastéis de KPI do Foundations.
+- Cores de área em `src/features/areas/presentation/style.ts` usam paleta Tailwind (`blue`, `amber`, …) — conjunto de domínio, não os pastéis de KPI do Foundations.
 - Shells `/app`, forms e neutro de área já usam tokens; paleta colorida de área (`blue`/`amber`/…) permanece domínio separado.
 
 ## 8. Fora de escopo (ainda)

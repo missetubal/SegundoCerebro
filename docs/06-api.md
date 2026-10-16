@@ -18,13 +18,11 @@
 
 ### Áreas
 
-> UI: **Áreas**. Paths abaixo ainda usam `pillars` até o rename técnico (camada B).
-
-- `GET /api/pillars`
-- `POST /api/pillars`
-- `GET /api/pillars/:id`
-- `PATCH /api/pillars/:id`
-- `DELETE /api/pillars/:id`
+- `GET /api/areas`
+- `POST /api/areas`
+- `GET /api/areas/:id`
+- `PATCH /api/areas/:id`
+- `DELETE /api/areas/:id`
 
 A exclusão pode ser substituída por arquivamento, conforme a regra de negócio adotada.
 
@@ -104,7 +102,7 @@ A implementação pode gerar o arquivo de forma síncrona no MVP, desde que o ta
     "unit": "L",
     "period": "day"
   },
-  "pillarIds": ["pillar-id"],
+  "areaIds": ["area-id"],
   "goalId": null
 }
 ```

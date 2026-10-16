@@ -44,6 +44,10 @@ jobs:
     needs: quality
     permissions:
       contents: read
+    # secrets cannot be referenced in step `if:`; expose as env first
+    env:
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -121,21 +125,19 @@ jobs:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
 
       - name: Install Playwright Chromium
-        if: ${{ secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '' }}
+        if: ${{ env.E2E_EMAIL != '' && env.E2E_PASSWORD != '' }}
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
-        if: ${{ secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '' }}
+        if: ${{ env.E2E_EMAIL != '' && env.E2E_PASSWORD != '' }}
         run: npm run test:e2e
         env:
           CI: true
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
           E2E_BASE_URL: http://localhost:3000
-          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
-          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
 
       - name: Upload Playwright report
-        if: ${{ failure() && secrets.E2E_EMAIL != '' }}
+        if: ${{ failure() && env.E2E_EMAIL != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ github.run_id }}
