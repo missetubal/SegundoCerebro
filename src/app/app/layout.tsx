@@ -5,10 +5,10 @@ import { AppSidebar } from '@/features/shell';
 
 export default function AppLayout({ children }: LayoutProps<'/app'>) {
   return (
-    <div className='flex min-h-dvh bg-bg-app'>
+    <div className='flex min-h-dvh flex-col bg-bg-app md:flex-row'>
       <Suspense
         fallback={
-          <aside className='h-dvh w-56 shrink-0 border-r border-border bg-bg-card' />
+          <aside className='hidden h-dvh w-56 shrink-0 border-r border-border bg-bg-card md:block' />
         }
       >
         <SidebarSlot />

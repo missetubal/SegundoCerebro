@@ -7,6 +7,7 @@ export type HabitTodayItem = {
   trackingType: string;
   targetValue: number | null;
   unit: string | null;
+  recorded: boolean;
 };
 
 type Props = {
@@ -43,7 +44,7 @@ export function HabitsTodayCard({ habits }: Props) {
                     ? `meta ${habit.targetValue} ${habit.unit}`
                     : 'conclusão'}
                   {' · '}
-                  <span className='text-orange-600'>sem registro</span>
+                  {habit.recorded ? 'Registrado' : 'Em aberto'}
                 </span>
               </div>
               <Link

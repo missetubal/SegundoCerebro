@@ -31,6 +31,19 @@ export function calendarDateInTimeZone(
   return `${year}-${month}-${day}`;
 }
 
+/** Shift a calendar `YYYY-MM-DD` by whole days, using UTC noon so DST does not skip a date. */
+export function shiftCalendarDate(dateYmd: string, days: number): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateYmd);
+  if (!match) {
+    throw new Error(`Invalid calendar date: ${dateYmd}`);
+  }
+  const [, year, month, day] = match;
+  const utc = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day) + days, 12),
+  );
+  return utc.toISOString().slice(0, 10);
+}
+
 /** ISO weekday for a calendar `YYYY-MM-DD` (interpreted as UTC noon to avoid DST edges). */
 export function isoWeekdayFromDateYmd(dateYmd: string): number {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateYmd);

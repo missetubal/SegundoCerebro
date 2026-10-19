@@ -4,6 +4,7 @@ import {
   isoWeekdayFromDateYmd,
   isoWeekdayToJs,
   jsWeekdayToIso,
+  shiftCalendarDate,
 } from './calendar';
 
 describe('weekday conversion', () => {
@@ -28,6 +29,14 @@ describe('isoWeekdayFromDateYmd', () => {
     expect(isoWeekdayFromDateYmd('2026-10-18')).toBe(7);
     // 2026-10-19 is a Monday → ISO 1
     expect(isoWeekdayFromDateYmd('2026-10-19')).toBe(1);
+  });
+});
+
+describe('shiftCalendarDate', () => {
+  it('moves to the previous calendar day across month and year boundaries', () => {
+    expect(shiftCalendarDate('2026-10-19', -1)).toBe('2026-10-18');
+    expect(shiftCalendarDate('2026-03-01', -1)).toBe('2026-02-28');
+    expect(shiftCalendarDate('2026-01-01', -1)).toBe('2025-12-31');
   });
 });
 
