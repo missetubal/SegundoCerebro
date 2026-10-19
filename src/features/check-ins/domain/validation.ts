@@ -80,8 +80,8 @@ export const checkInPutSchema = z
     generalNote: noteSchema
       .nullable()
       .optional()
-      .transform((value) => (value == null || value === '' ? null : value)),
-    mood: moodSchema.optional().transform((value) => value ?? null),
+      .transform((value) => (value === '' ? null : value)),
+    mood: moodSchema.optional(),
     habitLogs: z
       .array(z.union([clearLogSchema, completionLogSchema, quantityLogSchema]))
       .optional(),

@@ -37,6 +37,9 @@ async function CheckInContent({
   const parsed = entryDateSchema.safeParse(requested);
 
   if (!parsed.success || parsed.data > today) {
+    const message = parsed.success
+      ? 'Essa data ainda não está disponível.'
+      : 'Data inválida.';
     return (
       <>
         <header className='flex flex-col gap-3'>
@@ -46,9 +49,7 @@ async function CheckInContent({
           </div>
           <CheckInDateField entryDate={today} today={today} />
         </header>
-        <p className={`${card} p-4 text-sm`}>
-          Essa data ainda não está disponível.
-        </p>
+        <p className={`${card} p-4 text-sm`}>{message}</p>
         <p className={caption}>Em branco permanece neutro</p>
       </>
     );

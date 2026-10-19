@@ -81,6 +81,38 @@ describe('check-in route handlers', () => {
     expect(secondBody.createdAt).toBe(firstBody.createdAt);
   });
 
+  it('ignores a client userId and keeps omitted fields', async () => {
+    const userId = await fixtures.createUser();
+    const otherId = await fixtures.createUser();
+    asUser(userId);
+
+    const created = await PUT(
+      new Request('http://localhost/api/check-ins/2020-06-01', {
+        method: 'PUT',
+        body: JSON.stringify({
+          generalNote: 'nota da sessão',
+          mood: 2,
+          userId: otherId,
+        }),
+      }),
+      dateContext('2020-06-01'),
+    );
+    expect(created.status).toBe(200);
+
+    const moodOnly = await PUT(
+      new Request('http://localhost/api/check-ins/2020-06-01', {
+        method: 'PUT',
+        body: JSON.stringify({ mood: 5 }),
+      }),
+      dateContext('2020-06-01'),
+    );
+    expect(moodOnly.status).toBe(200);
+    expect(await moodOnly.json()).toMatchObject({
+      generalNote: 'nota da sessão',
+      mood: 5,
+    });
+  });
+
   it('rejects a future date and detailed fields', async () => {
     const userId = await fixtures.createUser();
     asUser(userId);

@@ -33,6 +33,11 @@ describe('checkInPutSchema', () => {
     }
   });
 
+  it('leaves omitted mood and note unset so a partial update can keep them', () => {
+    expect(checkInPutSchema.parse({})).toEqual({});
+    expect(checkInPutSchema.parse({ mood: null }).generalNote).toBeUndefined();
+  });
+
   it('rejects detailed fields and a client userId', () => {
     for (const extra of [
       { gratitude: 'obrigado' },

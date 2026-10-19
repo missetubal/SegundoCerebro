@@ -23,6 +23,16 @@ export type CheckInCommandResult =
 const invalidDate = 'Data inválida.';
 const futureDate = 'Essa data ainda não está disponível.';
 
+function stripClientUserId(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    return input;
+  }
+  if (!Object.hasOwn(input, 'userId')) return input;
+  const rest = { ...(input as Record<string, unknown>) };
+  delete rest.userId;
+  return rest;
+}
+
 export async function readCheckIn(
   userId: string,
   entryDate: string,
@@ -57,7 +67,7 @@ export async function saveCheckIn(
 ): Promise<CheckInCommandResult> {
   const date = entryDateSchema.safeParse(entryDate);
   if (!date.success) return { ok: false, message: invalidDate };
-  const body = checkInPutSchema.safeParse(input);
+  const body = checkInPutSchema.safeParse(stripClientUserId(input));
   if (!body.success) {
     return {
       ok: false,

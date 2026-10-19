@@ -5,7 +5,7 @@ export default function ResetPasswordPage() {
   return (
     <AuthFrame
       title='Nova senha'
-      description='Escolha uma senha nova para sua conta'
+      description='A troca de senha ainda não está disponível.'
       footer={
         <Link href='/signin' className={authLink}>
           Voltar a entrar

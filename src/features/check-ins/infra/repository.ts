@@ -83,9 +83,8 @@ function classifyLogs(
     const habit = owned.get(log.habitId);
     if (!habit) return 'invalid_habit';
     if (isClearLog(log)) continue;
-    if (habit.archivedAt || !isHabitDueOnIsoWeekday(habit, isoWeekday)) {
-      return 'not_applicable';
-    }
+    if (habit.archivedAt) return 'invalid_habit';
+    if (!isHabitDueOnIsoWeekday(habit, isoWeekday)) return 'not_applicable';
     if (habit.trackingType === 'completion' && isCompletionLog(log)) continue;
     if (habit.trackingType === 'quantity' && 'value' in log) continue;
     return 'invalid_log';
@@ -243,14 +242,16 @@ export async function upsertCheckIn(
     .values({
       userId,
       entryDate,
-      generalNote: input.generalNote,
-      mood: input.mood,
+      generalNote: input.generalNote ?? null,
+      mood: input.mood ?? null,
     })
     .onConflictDoUpdate({
       target: [dailyCheckIns.userId, dailyCheckIns.entryDate],
       set: {
-        generalNote: input.generalNote,
-        mood: input.mood,
+        ...(input.generalNote !== undefined
+          ? { generalNote: input.generalNote }
+          : {}),
+        ...(input.mood !== undefined ? { mood: input.mood } : {}),
         updatedAt: sql`now()`,
       },
     });

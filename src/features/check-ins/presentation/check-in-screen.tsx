@@ -85,6 +85,12 @@ export function CheckInDateField({
   today: string;
 }) {
   const router = useRouter();
+
+  function openCommittedDate(value: string) {
+    if (!value || value === entryDate) return;
+    router.push(value === today ? '/app/check-in' : `/app/check-in?date=${value}`);
+  }
+
   return (
     <label className='flex flex-col gap-1 text-sm'>
       Data
@@ -92,10 +98,11 @@ export function CheckInDateField({
         type='date'
         max={today}
         defaultValue={entryDate}
-        onChange={(event) => {
-          const next = event.target.value;
-          if (!next) return;
-          router.push(next === today ? '/app/check-in' : `/app/check-in?date=${next}`);
+        onBlur={(event) => openCommittedDate(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          openCommittedDate(event.currentTarget.value);
         }}
         className={`${textInput} min-w-0 max-w-full`}
       />
@@ -154,6 +161,7 @@ function CheckInForm({
                       <button
                         key={option.value}
                         type='button'
+                        aria-pressed={selected}
                         className={selected ? primaryButton : secondaryButton}
                         onClick={() =>
                           setCompletion((current) => ({

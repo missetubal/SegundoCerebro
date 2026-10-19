@@ -5,7 +5,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthFrame
       title='Esqueceu a senha?'
-      description='Enviamos um link se o e-mail existir na conta'
+      description='A recuperação de senha ainda não está disponível.'
       footer={
         <>
           Lembrou?{' '}

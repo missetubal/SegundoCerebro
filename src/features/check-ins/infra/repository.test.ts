@@ -146,6 +146,9 @@ describe('rejected habit writes', () => {
         habitLogs: [{ habitId, completionStatus: 'done' }],
       });
       expect(result.ok).toBe(false);
+      if (habitId === archived.id || habitId === foreign.id) {
+        expect(result).toMatchObject({ ok: false, reason: 'invalid_habit' });
+      }
       if (result.ok) continue;
       const message = checkInFailureMessage(result.reason);
       expect(message.toLowerCase()).not.toMatch(/falh|culpa|puni/);
