@@ -27,6 +27,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // Repository tests talk to Neon over HTTP. A full parallel run can
+    // push a correct test past Vitest's 5s default.
+    testTimeout: 20_000,
     env: testEnv,
     server: { deps: { inline: ['next-auth'] } },
   },
