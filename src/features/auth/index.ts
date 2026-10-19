@@ -1,5 +1,13 @@
 /** Client-safe public API. Server: `@/features/auth/server` */
-export { PasswordSignInForm, SignUpForm } from './presentation';
+export {
+  AuthFrame,
+  BrandMark,
+  ForgotPasswordForm,
+  PasswordSignInForm,
+  ResetPasswordForm,
+  SignUpForm,
+  authLink,
+} from './presentation';
 export {
   NAME_MAX,
   PASSWORD_MAX,

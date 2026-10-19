@@ -8,7 +8,7 @@ import { consumeRateLimits } from '@/shared/db';
 import { clientIp } from '@/shared/lib/client-ip';
 import { hashPassword } from '@/shared/lib/password';
 import { signUpIpLimit } from '@/shared/lib/rate-limit-policies';
-import { signUpSchema } from '../domain';
+import { NAME_MAX, signUpSchema } from '../domain';
 
 export type SignUpState =
   | { status: 'idle' }
@@ -29,9 +29,12 @@ export async function signUpAction(
   _prevState: SignUpState,
   formData: FormData,
 ): Promise<SignUpState> {
+  const email = String(formData.get('email') ?? '');
+  const providedName = String(formData.get('name') ?? '').trim();
+  const derivedName = email.split('@')[0]?.trim().slice(0, NAME_MAX) ?? '';
   const fields = {
-    name: String(formData.get('name') ?? ''),
-    email: String(formData.get('email') ?? ''),
+    name: providedName || derivedName,
+    email,
   };
   const fail = (message: string): SignUpState => ({
     status: 'error',
@@ -39,9 +42,15 @@ export async function signUpAction(
     fields,
   });
 
+  const confirmPassword = formData.get('confirmPassword');
+  const password = String(formData.get('password') ?? '');
+  if (confirmPassword !== null && String(confirmPassword) !== password) {
+    return fail('As senhas não coincidem.');
+  }
+
   const parsed = signUpSchema.safeParse({
     ...fields,
-    password: formData.get('password'),
+    password,
   });
   if (!parsed.success) return fail(parsed.error.issues[0].message);
 

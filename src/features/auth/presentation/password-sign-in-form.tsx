@@ -1,54 +1,62 @@
 'use client';
 
-import { useActionState } from 'react';
-import { primaryButton, textInput } from '@/shared/ui';
+import Link from 'next/link';
+import { useActionState, type ReactNode } from 'react';
+import { primaryButton } from '@/shared/ui';
 import {
   signInWithPasswordAction,
   type SignInState,
 } from '../application/sign-in-actions';
+import { AuthAlert, AuthDivider, AuthTextField, authCard, authLink } from './auth-frame';
 
 const initialState: SignInState = { status: 'idle' };
 
-export function PasswordSignInForm() {
+export function PasswordSignInForm({
+  notice,
+  google,
+}: {
+  notice?: string | null;
+  google: ReactNode;
+}) {
   const [state, formAction, pending] = useActionState(
     signInWithPasswordAction,
     initialState,
   );
+  const message = state.status === 'error' ? state.message : notice;
 
   return (
-    <form action={formAction} className='flex flex-col gap-4'>
-      <div className='flex flex-col gap-2'>
-        <label htmlFor='email' className='font-medium'>
-          E-mail
-        </label>
-        <input
+    <div className={authCard}>
+      {message ? <AuthAlert>{message}</AuthAlert> : null}
+      {google}
+      <AuthDivider />
+      <form action={formAction} className='flex flex-col gap-4'>
+        <AuthTextField
           id='email'
           name='email'
+          label='E-mail'
           type='email'
           autoComplete='email'
           required
-          className={textInput}
+          placeholder='voce@email.com'
         />
-      </div>
-      <div className='flex flex-col gap-2'>
-        <label htmlFor='password' className='font-medium'>
-          Senha
-        </label>
-        <input
+        <AuthTextField
           id='password'
           name='password'
+          label='Senha'
           type='password'
           autoComplete='current-password'
           required
-          className={textInput}
+          placeholder='••••••••'
+          hint={
+            <Link href='/forgot-password' className={`${authLink} text-[13px]`}>
+              Esqueceu a senha?
+            </Link>
+          }
         />
-      </div>
-      <button type='submit' disabled={pending} className={primaryButton}>
-        {pending ? 'Entrando…' : 'Entrar com e-mail'}
-      </button>
-      <p aria-live='polite' className='text-sm text-rose-700 dark:text-rose-300'>
-        {state.status === 'error' && state.message}
-      </p>
-    </form>
+        <button type='submit' disabled={pending} className={`${primaryButton} w-full py-2.5`}>
+          {pending ? 'Entrando…' : 'Entrar'}
+        </button>
+      </form>
+    </div>
   );
 }

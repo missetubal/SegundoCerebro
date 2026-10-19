@@ -57,6 +57,13 @@
       "when": 1792201000000,
       "tag": "0007_ambiguous_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792415440307,
+      "tag": "0008_colorful_white_tiger",
+      "breakpoints": true
     }
   ]
 }
