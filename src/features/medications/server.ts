@@ -19,6 +19,7 @@ export {
 } from './application/http';
 export { medicationDayStatementsForUser } from './application/service';
 export {
+  createMedication,
   listOccurrencesForDate,
   getMedication,
   listMedications,

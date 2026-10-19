@@ -1,8 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserId } from '@/features/auth/server';
 import { getCheckIn } from '@/features/check-ins/server';
-import { createMedication } from '@/features/medications/infra';
-import { listOccurrencesForDate } from '@/features/medications/server';
+import {
+  createMedication,
+  listOccurrencesForDate,
+} from '@/features/medications/server';
 import { IDLE_STATE } from '@/shared/lib';
 import { createUserFixtures } from '@/test/fixtures';
 import { saveCheckInAction } from './actions';
