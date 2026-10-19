@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { primaryButton, textInput } from '@/shared/ui';
 import { type ActionState, IDLE_STATE } from '@/shared/lib';
 import { NEXT_STEP_TITLE_MAX } from '../domain';
@@ -11,7 +11,17 @@ type Props = {
 };
 
 export function NextStepForm({ goalId, action }: Props) {
-  const [state, formAction, pending] = useActionState(action, IDLE_STATE);
+  const [title, setTitle] = useState('');
+  const [state, formAction, pending] = useActionState(
+    async (prev: ActionState, formData: FormData) => {
+      const next = await action(prev, formData);
+      if (next.status === 'success') {
+        setTitle('');
+      }
+      return next;
+    },
+    IDLE_STATE,
+  );
 
   return (
     <form action={formAction} className='flex flex-col gap-3'>
@@ -27,6 +37,8 @@ export function NextStepForm({ goalId, action }: Props) {
             required
             maxLength={NEXT_STEP_TITLE_MAX}
             placeholder='Ex.: Comprar tênis'
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             className={textInput}
           />
         </div>

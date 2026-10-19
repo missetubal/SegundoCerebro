@@ -4,7 +4,7 @@ export function greetingForHour(timeZone: string): string {
     new Intl.DateTimeFormat('en-US', {
       timeZone,
       hour: 'numeric',
-      hour12: false,
+      hourCycle: 'h23',
     }).format(new Date()),
   );
   if (hour < 12) return 'Bom dia';

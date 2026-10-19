@@ -10,10 +10,17 @@ export type GoalStatus = (typeof GOAL_STATUSES)[number];
 export const NEXT_STEP_STATUSES = ['open', 'done'] as const;
 export type NextStepStatus = (typeof NEXT_STEP_STATUSES)[number];
 
+function isRealCalendarDate(value: string): boolean {
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.toISOString().slice(0, 10) === value;
+}
+
 const optionalDate = optionalFormText.pipe(
   z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe uma data válida.')
+    .refine(isRealCalendarDate, 'Informe uma data válida.')
     .nullable(),
 );
 

@@ -92,7 +92,7 @@ async function HomeDashboard() {
 
       <div className='flex flex-wrap gap-3 text-sm text-muted'>
         <span>
-          Hábitos ativos{' '}
+          Hábitos hoje{' '}
           <strong className='text-ink'>{todayHabits.length}</strong>
         </span>
         <span>

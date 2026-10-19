@@ -56,6 +56,15 @@ describe('goalInputSchema', () => {
     );
   });
 
+  it('rejects YYYY-MM-DD values that are not real calendar dates', () => {
+    const result = goalInputSchema.safeParse({
+      ...valid,
+      startDate: '2026-02-31',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe('Informe uma data válida.');
+  });
+
   it('rejects an invalid status', () => {
     const result = goalInputSchema.safeParse({ ...valid, status: 'paused' });
     expect(result.success).toBe(false);
