@@ -8,6 +8,12 @@ import {
   errorState,
   SUCCESS_STATE,
 } from '@/shared/lib';
+import { firstIssueMessage } from '@/shared/lib/validation';
+import {
+  formDataToMedicationDay,
+  medicationDayPutSchema,
+  medicationDayStatementsForUser,
+} from '@/features/medications/server';
 import { formDataToCheckInInput, formText } from './form-data';
 import { removeCheckIn, saveCheckIn } from './service';
 
@@ -16,11 +22,25 @@ export async function saveCheckInAction(
   formData: FormData,
 ): Promise<ActionState> {
   const userId = await requireUserId();
+  const entryDate = formText(formData, 'entryDate');
+  const medication = medicationDayPutSchema.safeParse(
+    formDataToMedicationDay(formData),
+  );
+  if (!medication.success) {
+    return errorState(firstIssueMessage(medication.error, 'Revise os campos.'));
+  }
   try {
+    const marks = await medicationDayStatementsForUser(
+      userId,
+      entryDate,
+      medication.data,
+    );
+    if (!marks.ok) return errorState(marks.message);
     const saved = await saveCheckIn(
       userId,
-      formText(formData, 'entryDate'),
+      entryDate,
       formDataToCheckInInput(formData),
+      marks.statements,
     );
     if (!saved.ok) return errorState(saved.message);
     return SUCCESS_STATE;

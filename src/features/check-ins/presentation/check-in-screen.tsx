@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { ConfirmDeleteDialog } from '@/shared/ui';
 import { type ActionState, IDLE_STATE } from '@/shared/lib';
 import {
@@ -31,6 +31,14 @@ export type CheckInOrphanField = {
   summary: string;
 };
 
+export type CheckInMedicationField = {
+  medicationId: string;
+  name: string;
+  scheduledTime: string;
+  status: 'done' | 'not_done' | 'pending';
+  orphan: boolean;
+};
+
 type Props = {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   deleteAction: (state: ActionState, formData: FormData) => Promise<ActionState>;
@@ -42,6 +50,7 @@ type Props = {
   mood: number | null;
   habits: CheckInHabitField[];
   orphans: CheckInOrphanField[];
+  medications: CheckInMedicationField[];
   hasSavedData: boolean;
 };
 
@@ -52,6 +61,26 @@ const COMPLETION = [
 ] as const;
 
 type CompletionValue = (typeof COMPLETION)[number]['value'];
+
+const MED_STATUS = [
+  { value: 'done', label: 'Realizado' },
+  { value: 'not_done', label: 'Não realizado' },
+  { value: 'pending', label: 'Pendente' },
+] as const;
+
+type MedStatus = (typeof MED_STATUS)[number]['value'];
+
+function medicationKey(medication: CheckInMedicationField): string {
+  return `${medication.medicationId}|${medication.scheduledTime}`;
+}
+
+function medicationOptions(medication: CheckInMedicationField) {
+  if (!medication.orphan) return MED_STATUS;
+  return MED_STATUS.filter(
+    (option) =>
+      option.value === medication.status || option.value === 'pending',
+  );
+}
 
 export function CheckInScreen(props: Props) {
   return (
@@ -118,6 +147,7 @@ function CheckInForm({
   mood,
   habits,
   orphans,
+  medications,
   hasSavedData,
 }: Props) {
   const router = useRouter();
@@ -131,10 +161,25 @@ function CheckInForm({
           .map((habit) => [habit.id, habit.completionStatus ?? 'unset']),
       ),
   );
+  const [medicationStatus, setMedicationStatus] = useState<
+    Record<string, MedStatus>
+  >(() =>
+    Object.fromEntries(
+      medications.map((medication) => [
+        medicationKey(medication),
+        medication.status,
+      ]),
+    ),
+  );
 
+  const status = state.status;
+  const previousStatus = useRef(status);
   useEffect(() => {
-    if (state.status === 'success') router.refresh();
-  }, [router, state]);
+    if (previousStatus.current !== 'success' && status === 'success') {
+      router.refresh();
+    }
+    previousStatus.current = status;
+  }, [router, status]);
 
   return (
     <>
@@ -224,6 +269,74 @@ function CheckInForm({
           </article>
         ))}
 
+        <section className='flex flex-col gap-3'>
+          <div className='flex flex-col gap-1'>
+            <h2 className='text-base font-semibold'>Medicamentos</h2>
+            <p className={caption}>
+              Organização sua. O app não interpreta anotações nem orienta
+              conduta.
+            </p>
+          </div>
+          {medications.length === 0 ? (
+            <div className={`${card} p-5`}>
+              <p className={bodyText}>Nenhum medicamento para este dia.</p>
+              <Link
+                href='/app/medications/new'
+                className='mt-2 inline-block text-sm underline'
+              >
+                Cadastrar medicamento
+              </Link>
+            </div>
+          ) : (
+            medications.map((medication) => {
+              const key = medicationKey(medication);
+              const selected = medicationStatus[key] ?? medication.status;
+              return (
+                <article key={key} className={`${card} flex flex-col gap-3 p-4`}>
+                  <h3 className='text-base font-semibold'>
+                    {medication.name}{' '}
+                    <span className='font-normal text-muted'>
+                      · {medication.scheduledTime}
+                    </span>
+                  </h3>
+                  {medication.orphan && (
+                    <p className={caption}>
+                      Registro já salvo. Dá para manter ou voltar a pendente.
+                    </p>
+                  )}
+                  <div className='flex flex-wrap gap-2'>
+                    {medicationOptions(medication).map((option) => (
+                      <button
+                        key={option.value}
+                        type='button'
+                        aria-pressed={selected === option.value}
+                        className={
+                          selected === option.value
+                            ? primaryButton
+                            : secondaryButton
+                        }
+                        onClick={() =>
+                          setMedicationStatus((current) => ({
+                            ...current,
+                            [key]: option.value,
+                          }))
+                        }
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type='hidden'
+                    name={`med:${medication.medicationId}:${medication.scheduledTime}`}
+                    value={selected}
+                  />
+                </article>
+              );
+            })
+          )}
+        </section>
+
         <article className={`${card} flex flex-col gap-2 p-4`}>
           <label htmlFor='generalNote' className='text-base font-semibold'>
             Nota do dia <span className='text-sm font-normal text-muted'>(opcional)</span>
@@ -287,7 +400,7 @@ function CheckInForm({
             action={deleteAction}
             id={entryDate}
             title='Apagar este dia?'
-            description='A nota, o humor e os registros deste dia saem. O dia fica em branco.'
+            description='A nota, o humor e os hábitos deste dia saem. Os medicamentos ficam.'
             triggerLabel='Apagar este dia'
             triggerClassName='text-sm text-muted underline'
             trigger='Apagar este dia'

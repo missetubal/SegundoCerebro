@@ -324,3 +324,68 @@ export const habitLogs = pgTable(
     index('habit_log_user_date_idx').on(log.userId, log.entryDate),
   ],
 );
+
+export const medications = pgTable(
+  'medication',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    instructions: text('instructions'),
+    frequencyKind: text('frequency_kind').notNull(),
+    weekdays: integer('weekdays').array(),
+    times: text('times').array().notNull(),
+    startsOn: date('starts_on').notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (medication) => [
+    index('medication_user_archived_idx').on(
+      medication.userId,
+      medication.archivedAt,
+    ),
+  ],
+);
+
+export const medicationLogs = pgTable(
+  'medication_log',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    medicationId: text('medication_id')
+      .notNull()
+      .references(() => medications.id, { onDelete: 'cascade' }),
+    entryDate: date('entry_date').notNull(),
+    scheduledTime: text('scheduled_time').notNull(),
+    status: text('status').notNull(),
+    takenAt: timestamp('taken_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (log) => [
+    uniqueIndex('medication_log_user_med_date_time_unique').on(
+      log.userId,
+      log.medicationId,
+      log.entryDate,
+      log.scheduledTime,
+    ),
+    index('medication_log_user_date_idx').on(log.userId, log.entryDate),
+  ],
+);

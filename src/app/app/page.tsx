@@ -116,9 +116,9 @@ async function HomeDashboard() {
         />
         <KpiTile
           pastel='peach'
-          label='Meds'
-          value='Em breve'
-          hint='medicamentos na próxima fatia'
+          label='Medicamentos'
+          value='No check-in'
+          hint='organização do dia'
         />
         <KpiTile
           pastel='lilac'

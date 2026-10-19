@@ -224,6 +224,7 @@ export async function upsertCheckIn(
   userId: string,
   entryDate: string,
   input: CheckInPut,
+  extra: BatchQuery[] = [],
 ): Promise<UpsertCheckInResult> {
   const logs = input.habitLogs;
   let owned: Map<string, HabitRow> | null = null;
@@ -327,7 +328,7 @@ export async function upsertCheckIn(
     }
   }
 
-  await commit(statements);
+  await commit([...statements, ...extra]);
   return { ok: true, item: await getCheckIn(userId, entryDate) };
 }
 

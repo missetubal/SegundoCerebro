@@ -64,6 +64,7 @@ export async function saveCheckIn(
   userId: string,
   entryDate: string,
   input: unknown,
+  extra: Parameters<typeof upsertCheckIn>[3] = [],
 ): Promise<CheckInCommandResult> {
   const date = entryDateSchema.safeParse(entryDate);
   if (!date.success) return { ok: false, message: invalidDate };
@@ -77,7 +78,7 @@ export async function saveCheckIn(
   const preferences = await getPreferences(userId);
   const today = calendarDateInTimeZone(preferences.timezone);
   if (date.data > today) return { ok: false, message: futureDate };
-  const saved = await upsertCheckIn(userId, date.data, body.data);
+  const saved = await upsertCheckIn(userId, date.data, body.data, extra);
   if (!saved.ok) {
     return { ok: false, message: checkInFailureMessage(saved.reason) };
   }

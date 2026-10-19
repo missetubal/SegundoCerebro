@@ -1,6 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserId } from '@/features/auth/server';
 import { getCheckIn } from '@/features/check-ins/server';
+import {
+  createMedication,
+  listOccurrencesForDate,
+} from '@/features/medications/server';
 import { IDLE_STATE } from '@/shared/lib';
 import { createUserFixtures } from '@/test/fixtures';
 import { saveCheckInAction } from './actions';
@@ -59,5 +63,46 @@ describe('saveCheckInAction', () => {
       message: 'Essa data ainda não está disponível.',
     });
     expect((await getCheckIn(userId, '2099-01-01')).createdAt).toBeNull();
+  });
+
+  it('persists a medication mark with the check-in save', async () => {
+    const userId = await fixtures.createUser();
+    mockedRequireUserId.mockResolvedValue(userId);
+    const medication = await createMedication(userId, {
+      name: 'Losartana',
+      instructions: null,
+      frequencyKind: 'daily',
+      weekdays: null,
+      times: ['08:00'],
+      startsOn: '2020-06-01',
+    });
+
+    const formData = new FormData();
+    formData.set('entryDate', '2020-06-01');
+    formData.set('generalNote', 'Só a nota');
+    formData.set('mood', '');
+    formData.set(`med:${medication.id}:08:00`, 'done');
+
+    expect(await saveCheckInAction(IDLE_STATE, formData)).toEqual({
+      status: 'success',
+    });
+    expect(await listOccurrencesForDate(userId, '2020-06-01')).toEqual([
+      expect.objectContaining({
+        medicationId: medication.id,
+        scheduledTime: '08:00',
+        status: 'done',
+      }),
+    ]);
+
+    formData.set(`med:${medication.id}:08:00`, 'pending');
+    expect(await saveCheckInAction(IDLE_STATE, formData)).toEqual({
+      status: 'success',
+    });
+    expect(
+      (await listOccurrencesForDate(userId, '2020-06-01'))[0]?.status,
+    ).toBe('pending');
+    expect(await getCheckIn(userId, '2020-06-01')).toMatchObject({
+      generalNote: 'Só a nota',
+    });
   });
 });
