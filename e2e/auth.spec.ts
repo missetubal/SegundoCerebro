@@ -14,7 +14,7 @@ test.describe('auth', () => {
     await page.goto('/signin');
     await page.getByLabel('E-mail').fill(email);
     await page.getByLabel('Senha').fill('senha-errada-e2e');
-    await page.getByRole('button', { name: 'Entrar com e-mail' }).click();
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
     await expect(page.getByText('E-mail ou senha incorretos.')).toBeVisible();
     await expect(page).toHaveURL(/\/signin/);
   });

@@ -1,55 +1,40 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { signIn } from '@/features/auth/server';
-import { PasswordSignInForm } from '@/features/auth';
-import { secondaryButton } from '@/shared/ui';
+import { AuthFrame, PasswordSignInForm, authLink } from '@/features/auth';
+import { GoogleSignInButton } from '@/features/auth/server';
 
 export default function SignInPage({ searchParams }: PageProps<'/signin'>) {
   return (
-    <main className='mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6'>
-      <h1 className='text-2xl font-semibold'>Entrar</h1>
-      <Suspense fallback={null}>
-        <AuthErrorNotice searchParams={searchParams} />
-      </Suspense>
-      <PasswordSignInForm />
-      <p className='text-center text-sm text-muted'>ou</p>
-      <form
-        action={async () => {
-          'use server';
-          await signIn('google', { redirectTo: '/app' });
-        }}
+    <AuthFrame
+      title='Bem-vinda de volta'
+      description='Entre na sua conta do Segundo Cérebro'
+      footer={
+        <>
+          Ainda não tem conta?{' '}
+          <Link href='/signup' className={authLink}>
+            Criar conta
+          </Link>
+        </>
+      }
+    >
+      <Suspense
+        fallback={<PasswordSignInForm google={<GoogleSignInButton />} />}
       >
-        <button type='submit' className={`${secondaryButton} w-full`}>
-          Entrar com Google
-        </button>
-      </form>
-      <p className='text-sm'>
-        Ainda não tem conta?{' '}
-        <Link href='/signup' className='underline'>
-          Criar conta
-        </Link>
-      </p>
-    </main>
+        <SignInBody searchParams={searchParams} />
+      </Suspense>
+    </AuthFrame>
   );
 }
 
-async function AuthErrorNotice({
+async function SignInBody({
   searchParams,
 }: Pick<PageProps<'/signin'>, 'searchParams'>) {
   const { error } = await searchParams;
-  if (!error) return null;
-
-  const message =
-    error === 'OAuthAccountNotLinked'
+  const notice = !error
+    ? null
+    : error === 'OAuthAccountNotLinked'
       ? 'Este e-mail já tem uma conta com senha. Entre com e-mail e senha.'
       : 'Não foi possível entrar. Tente de novo.';
 
-  return (
-    <p
-      role='alert'
-      className='rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300'
-    >
-      {message}
-    </p>
-  );
+  return <PasswordSignInForm notice={notice} google={<GoogleSignInButton />} />;
 }

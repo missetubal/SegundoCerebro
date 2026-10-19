@@ -1,17 +1,22 @@
 import Link from 'next/link';
-import { SignUpForm } from '@/features/auth';
+import { AuthFrame, SignUpForm, authLink } from '@/features/auth';
+import { GoogleSignInButton } from '@/features/auth/server';
 
 export default function SignUpPage() {
   return (
-    <main className='mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-6'>
-      <h1 className='text-2xl font-semibold'>Criar conta</h1>
-      <SignUpForm />
-      <p className='text-sm'>
-        Já tem conta?{' '}
-        <Link href='/signin' className='underline'>
-          Entrar
-        </Link>
-      </p>
-    </main>
+    <AuthFrame
+      title='Criar conta'
+      description='Comece a organizar suas áreas'
+      footer={
+        <>
+          Já tem conta?{' '}
+          <Link href='/signin' className={authLink}>
+            Entrar
+          </Link>
+        </>
+      }
+    >
+      <SignUpForm google={<GoogleSignInButton />} />
+    </AuthFrame>
   );
 }

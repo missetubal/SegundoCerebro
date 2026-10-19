@@ -11,6 +11,7 @@ export {
   type PasswordUser,
   requireUserId,
 } from './infra';
+export { GoogleSignInButton } from './presentation/google-sign-in-button';
 export {
   signInWithPasswordAction,
   signUpAction,

@@ -16,7 +16,7 @@ export async function signIn(page: Page) {
   await page.goto('/signin');
   await page.getByLabel('E-mail').fill(email);
   await page.getByLabel('Senha').fill(password);
-  await page.getByRole('button', { name: 'Entrar com e-mail' }).click();
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page).toHaveURL(/\/app(?:\/|$)/);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 }
