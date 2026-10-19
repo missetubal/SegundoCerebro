@@ -27,9 +27,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
-    // Repository tests talk to Neon over HTTP. A full parallel run can
-    // push a correct test past Vitest's 5s default.
-    testTimeout: 20_000,
     env: testEnv,
     // Neon-backed integration tests routinely take 1–4s each; heavy isolation
     // cases tip over Vitest's 5s default under CI load.
