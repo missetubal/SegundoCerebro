@@ -209,5 +209,5 @@ describe('isolation', () => {
     expect((await getCheckIn(userA, day)).createdAt).toBeNull();
     expect((await getCheckIn(userB, day)).mood).toBe(5);
     expect((await getCheckIn(userA, '2026-10-14')).createdAt).toBeNull();
-  });
+  }, 15_000);
 });

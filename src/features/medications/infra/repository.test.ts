@@ -38,7 +38,7 @@ async function ownedMedication(
 }
 
 describe('medication repository', () => {
-  it('keeps createdAt and an existing takenAt, stores two times, and deletes pending without a not_done row', async () => {
+  it('keeps createdAt, stores two times, and deletes pending without a not_done row', async () => {
     const userId = await fixtures.createUser();
     const medication = await ownedMedication(userId);
 
@@ -105,78 +105,6 @@ describe('medication repository', () => {
       morningStored?.createdAt.toISOString(),
     );
 
-    const markedAt = new Date('2020-01-01T12:00:00.000Z');
-    await db
-      .update(medicationLogs)
-      .set({ takenAt: markedAt })
-      .where(
-        and(
-          eq(medicationLogs.userId, userId),
-          eq(medicationLogs.medicationId, medication.id),
-          eq(medicationLogs.scheduledTime, '08:00'),
-        ),
-      );
-    const kept = await saveMedicationDay(
-      userId,
-      today,
-      {
-        logs: [
-          { medicationId: medication.id, scheduledTime: '08:00', status: 'done' },
-        ],
-      },
-      today,
-    );
-    expect(kept.ok).toBe(true);
-    const [stillDone] = await db
-      .select({ takenAt: medicationLogs.takenAt })
-      .from(medicationLogs)
-      .where(
-        and(
-          eq(medicationLogs.userId, userId),
-          eq(medicationLogs.medicationId, medication.id),
-          eq(medicationLogs.scheduledTime, '08:00'),
-        ),
-      );
-    expect(stillDone?.takenAt?.toISOString()).toBe(markedAt.toISOString());
-
-    await saveMedicationDay(
-      userId,
-      today,
-      {
-        logs: [
-          {
-            medicationId: medication.id,
-            scheduledTime: '08:00',
-            status: 'not_done',
-          },
-        ],
-      },
-      today,
-    );
-    const redone = await saveMedicationDay(
-      userId,
-      today,
-      {
-        logs: [
-          { medicationId: medication.id, scheduledTime: '08:00', status: 'done' },
-        ],
-      },
-      today,
-    );
-    expect(redone.ok).toBe(true);
-    const [fresh] = await db
-      .select({ takenAt: medicationLogs.takenAt })
-      .from(medicationLogs)
-      .where(
-        and(
-          eq(medicationLogs.userId, userId),
-          eq(medicationLogs.medicationId, medication.id),
-          eq(medicationLogs.scheduledTime, '08:00'),
-        ),
-      );
-    expect(fresh?.takenAt).toBeInstanceOf(Date);
-    expect(fresh?.takenAt?.toISOString()).not.toBe(markedAt.toISOString());
-
     const cleared = await saveMedicationDay(
       userId,
       today,
@@ -198,6 +126,56 @@ describe('medication repository', () => {
       ),
     ).toBe(false);
   });
+
+  it('keeps takenAt until the status leaves done', async () => {
+    const userId = await fixtures.createUser();
+    const medication = await ownedMedication(userId, { times: ['08:00'] });
+    const mark = (status: 'done' | 'not_done') =>
+      saveMedicationDay(
+        userId,
+        today,
+        {
+          logs: [{ medicationId: medication.id, scheduledTime: '08:00', status }],
+        },
+        today,
+      );
+    const readTakenAt = async () => {
+      const [row] = await db
+        .select({ takenAt: medicationLogs.takenAt })
+        .from(medicationLogs)
+        .where(
+          and(
+            eq(medicationLogs.userId, userId),
+            eq(medicationLogs.medicationId, medication.id),
+            eq(medicationLogs.scheduledTime, '08:00'),
+          ),
+        );
+      return row?.takenAt ?? null;
+    };
+
+    expect((await mark('done')).ok).toBe(true);
+    const markedAt = new Date('2020-01-01T12:00:00.000Z');
+    await db
+      .update(medicationLogs)
+      .set({ takenAt: markedAt })
+      .where(
+        and(
+          eq(medicationLogs.userId, userId),
+          eq(medicationLogs.medicationId, medication.id),
+        ),
+      );
+
+    expect((await mark('done')).ok).toBe(true);
+    expect((await readTakenAt())?.toISOString()).toBe(markedAt.toISOString());
+
+    expect((await mark('not_done')).ok).toBe(true);
+    expect(await readTakenAt()).toBeNull();
+
+    expect((await mark('done')).ok).toBe(true);
+    const fresh = await readTakenAt();
+    expect(fresh).toBeInstanceOf(Date);
+    expect(fresh?.toISOString()).not.toBe(markedAt.toISOString());
+  }, 15_000);
 
   it('rejects future dates, foreign ids, archived meds, dates before startsOn, and off-schedule days without writing', async () => {
     const userId = await fixtures.createUser();
