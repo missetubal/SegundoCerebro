@@ -301,6 +301,57 @@ export async function listMedicationLogs(
 
 type BatchQuery = Parameters<typeof db.batch>[0][number];
 
+function takenAtOnConflict(status: 'done' | 'not_done') {
+  if (status === 'not_done') return null;
+  return sql`CASE WHEN ${medicationLogs.status} = 'done' THEN ${medicationLogs.takenAt} ELSE now() END`;
+}
+
+export function medicationDayStatements(
+  userId: string,
+  entryDate: string,
+  logs: MedicationDayPut['logs'],
+): BatchQuery[] {
+  const statements: BatchQuery[] = [];
+  for (const log of logs) {
+    const where = and(
+      eq(medicationLogs.userId, userId),
+      eq(medicationLogs.medicationId, log.medicationId),
+      eq(medicationLogs.entryDate, entryDate),
+      eq(medicationLogs.scheduledTime, log.scheduledTime),
+    );
+    if (log.status === 'pending') {
+      statements.push(db.delete(medicationLogs).where(where));
+      continue;
+    }
+    statements.push(
+      db
+        .insert(medicationLogs)
+        .values({
+          userId,
+          medicationId: log.medicationId,
+          entryDate,
+          scheduledTime: log.scheduledTime,
+          status: log.status,
+          takenAt: log.status === 'done' ? sql`now()` : null,
+        })
+        .onConflictDoUpdate({
+          target: [
+            medicationLogs.userId,
+            medicationLogs.medicationId,
+            medicationLogs.entryDate,
+            medicationLogs.scheduledTime,
+          ],
+          set: {
+            status: log.status,
+            takenAt: takenAtOnConflict(log.status),
+            updatedAt: sql`now()`,
+          },
+        }),
+    );
+  }
+  return statements;
+}
+
 async function commit(statements: BatchQuery[]) {
   const [first, ...rest] = statements;
   if (!first) return;
@@ -365,46 +416,7 @@ export async function saveMedicationDay(
     return { ok: true, occurrences: await listOccurrencesForDate(userId, entryDate) };
   }
 
-  const statements: BatchQuery[] = [];
-  for (const log of logs) {
-    const where = and(
-      eq(medicationLogs.userId, userId),
-      eq(medicationLogs.medicationId, log.medicationId),
-      eq(medicationLogs.entryDate, entryDate),
-      eq(medicationLogs.scheduledTime, log.scheduledTime),
-    );
-    if (log.status === 'pending') {
-      statements.push(db.delete(medicationLogs).where(where));
-      continue;
-    }
-    statements.push(
-      db
-        .insert(medicationLogs)
-        .values({
-          userId,
-          medicationId: log.medicationId,
-          entryDate,
-          scheduledTime: log.scheduledTime,
-          status: log.status,
-          takenAt: log.status === 'done' ? sql`now()` : null,
-        })
-        .onConflictDoUpdate({
-          target: [
-            medicationLogs.userId,
-            medicationLogs.medicationId,
-            medicationLogs.entryDate,
-            medicationLogs.scheduledTime,
-          ],
-          set: {
-            status: log.status,
-            takenAt: log.status === 'done' ? sql`now()` : null,
-            updatedAt: sql`now()`,
-          },
-        }),
-    );
-  }
-
-  await commit(statements);
+  await commit(medicationDayStatements(userId, entryDate, logs));
   return {
     ok: true,
     occurrences: await listOccurrencesForDate(userId, entryDate),

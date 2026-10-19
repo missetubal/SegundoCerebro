@@ -18,6 +18,7 @@ import {
   listMedicationLogs,
   listMedications,
   listOccurrencesForDate,
+  medicationDayStatements,
   prepareMedicationDay,
   saveMedicationDay,
   updateMedication,
@@ -127,28 +128,24 @@ export async function saveMedicationDayForUser(
   return { ok: true, item: saved.occurrences };
 }
 
-/** Validates medication marks, including a future date, before the check-in write. */
-export async function prepareMedicationDayForUser(
+/** Validates marks and returns the writes. The check-in save runs them in its batch. */
+export async function medicationDayStatementsForUser(
   userId: string,
   entryDate: string,
   input: MedicationDayPut,
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<
+  | { ok: true; statements: ReturnType<typeof medicationDayStatements> }
+  | { ok: false; message: string }
+> {
   const date = entryDateSchema.safeParse(entryDate);
   if (!date.success) return { ok: false, message: invalidDate };
   const today = await todayFor(userId);
   const ready = await prepareMedicationDay(userId, date.data, input, today);
   if (!ready.ok) return { ok: false, message: medicationFailureMessage(ready.reason) };
-  return { ok: true };
-}
-
-export async function commitMedicationDayForUser(
-  userId: string,
-  entryDate: string,
-  input: MedicationDayPut,
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  const saved = await saveMedicationDayForUser(userId, entryDate, input);
-  if (!saved.ok) return saved;
-  return { ok: true };
+  return {
+    ok: true,
+    statements: medicationDayStatements(userId, date.data, input.logs),
+  };
 }
 
 export function toMedicationJson(item: Medication) {

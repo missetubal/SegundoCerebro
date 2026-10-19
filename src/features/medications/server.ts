@@ -17,10 +17,7 @@ export {
   putMedicationDayHttp,
   updateMedicationHttp,
 } from './application/http';
-export {
-  commitMedicationDayForUser,
-  prepareMedicationDayForUser,
-} from './application/service';
+export { medicationDayStatementsForUser } from './application/service';
 export {
   listOccurrencesForDate,
   getMedication,

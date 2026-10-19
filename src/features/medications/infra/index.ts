@@ -6,6 +6,7 @@ export {
   listMedicationLogs,
   listMedications,
   listOccurrencesForDate,
+  medicationDayStatements,
   prepareMedicationDay,
   saveMedicationDay,
   unarchiveMedication,

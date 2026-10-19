@@ -400,7 +400,7 @@ function CheckInForm({
             action={deleteAction}
             id={entryDate}
             title='Apagar este dia?'
-            description='A nota, o humor e os registros deste dia saem. O dia fica em branco.'
+            description='A nota, o humor e os hábitos deste dia saem. Os medicamentos ficam.'
             triggerLabel='Apagar este dia'
             triggerClassName='text-sm text-muted underline'
             trigger='Apagar este dia'
