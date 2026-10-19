@@ -264,3 +264,63 @@ export const habitAreas = pgTable(
     primaryKey({ columns: [habitArea.habitId, habitArea.areaId] }),
   ],
 );
+
+export const dailyCheckIns = pgTable(
+  'daily_check_in',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    entryDate: date('entry_date').notNull(),
+    generalNote: text('general_note'),
+    mood: integer('mood'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (checkIn) => [
+    uniqueIndex('daily_check_in_user_date_unique').on(
+      checkIn.userId,
+      checkIn.entryDate,
+    ),
+  ],
+);
+
+export const habitLogs = pgTable(
+  'habit_log',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    habitId: text('habit_id')
+      .notNull()
+      .references(() => habits.id, { onDelete: 'cascade' }),
+    entryDate: date('entry_date').notNull(),
+    completionStatus: text('completion_status'),
+    value: integer('value'),
+    unit: text('unit'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (log) => [
+    uniqueIndex('habit_log_user_habit_date_unique').on(
+      log.userId,
+      log.habitId,
+      log.entryDate,
+    ),
+    index('habit_log_user_date_idx').on(log.userId, log.entryDate),
+  ],
+);
