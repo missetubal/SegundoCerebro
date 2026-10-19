@@ -39,7 +39,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium ${
+      className={`flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium whitespace-nowrap md:py-1.5 ${
         active
           ? 'bg-bg-app text-ink'
           : 'text-muted hover:bg-bg-app hover:text-ink'
@@ -59,7 +59,43 @@ export function AppSidebar({ areas, userName }: Props) {
     pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <aside className='flex h-dvh w-56 shrink-0 flex-col border-r border-border bg-bg-card'>
+    <>
+      <nav
+        aria-label='Principal'
+        className='flex gap-1 overflow-x-auto border-b border-border bg-bg-card px-3 py-2 md:hidden'
+      >
+        <NavLink
+          href='/app'
+          label='Início'
+          active={pathname === '/app'}
+          icon={<Home className='size-3.5' aria-hidden />}
+        />
+        <NavLink
+          href='/app/check-in'
+          label='Check-in'
+          active={is('/app/check-in')}
+          icon={<HeartPulse className='size-3.5' aria-hidden />}
+        />
+        <NavLink
+          href='/app/habits'
+          label='Hábitos'
+          active={is('/app/habits')}
+          icon={<HeartPulse className='size-3.5' aria-hidden />}
+        />
+        <NavLink
+          href='/app/medications'
+          label='Medicamentos'
+          active={is('/app/medications')}
+          icon={<Pill className='size-3.5' aria-hidden />}
+        />
+        <NavLink
+          href='/app/goals'
+          label='Metas'
+          active={is('/app/goals')}
+          icon={<Target className='size-3.5' aria-hidden />}
+        />
+      </nav>
+      <aside className='hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-bg-card md:flex'>
       <div className='flex flex-col gap-0.5 border-b border-border px-4 py-4'>
         <span className='text-sm font-semibold text-ink'>Segundo Cérebro</span>
         <span className={caption}>Protótipo</span>
@@ -177,5 +213,6 @@ export function AppSidebar({ areas, userName }: Props) {
         </div>
       </div>
     </aside>
+    </>
   );
 }
