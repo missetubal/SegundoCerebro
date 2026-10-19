@@ -9,6 +9,7 @@ import {
   History,
   Home,
   Layers,
+  Pill,
   Settings,
   Target,
 } from 'lucide-react';
@@ -96,6 +97,12 @@ export function AppSidebar({ areas, userName }: Props) {
             label='Check-in'
             active={is('/app/check-in')}
             icon={<HeartPulse className='size-3.5' aria-hidden />}
+          />
+          <NavLink
+            href='/app/medications'
+            label='Medicamentos'
+            active={is('/app/medications')}
+            icon={<Pill className='size-3.5' aria-hidden />}
           />
         </div>
 

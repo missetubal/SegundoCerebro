@@ -7,6 +7,7 @@ import {
 } from '@/features/check-ins/server';
 import { requireUserId } from '@/features/auth/server';
 import { listHabitsForDate } from '@/features/habits/server';
+import { listOccurrencesForDate } from '@/features/medications/server';
 import { getPreferences } from '@/features/preferences/server';
 import { calendarDateInTimeZone } from '@/shared/lib/calendar';
 import { caption, card, eyebrow } from '@/shared/ui';
@@ -56,9 +57,10 @@ async function CheckInContent({
   }
 
   const entryDate = parsed.data;
-  const [habits, checkIn] = await Promise.all([
+  const [habits, checkIn, medications] = await Promise.all([
     listHabitsForDate(userId, entryDate, preferences.timezone),
     getCheckIn(userId, entryDate),
+    listOccurrencesForDate(userId, entryDate),
   ]);
   const applicableIds = new Set(habits.map((habit) => habit.id));
   const logsByHabit = new Map(
@@ -69,6 +71,8 @@ async function CheckInContent({
     <CheckInScreen
       key={`${entryDate}:${checkIn.updatedAt?.toISOString() ?? 'empty'}:${checkIn.habitLogs
         .map((log) => `${log.id}:${log.completionStatus}:${log.value}`)
+        .join('|')}:${medications
+        .map((item) => `${item.medicationId}:${item.scheduledTime}:${item.status}`)
         .join('|')}`}
       action={saveCheckInAction}
       deleteAction={deleteCheckInAction}
@@ -98,6 +102,13 @@ async function CheckInContent({
           habitName: log.habitName,
           summary: orphanSummary(log),
         }))}
+      medications={medications.map((item) => ({
+        medicationId: item.medicationId,
+        name: item.name,
+        scheduledTime: item.scheduledTime,
+        status: item.status,
+        orphan: item.orphan,
+      }))}
     />
   );
 }
