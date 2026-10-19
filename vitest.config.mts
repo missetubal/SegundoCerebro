@@ -28,6 +28,10 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     env: testEnv,
+    // Neon-backed integration tests routinely take 1–4s each; heavy isolation
+    // cases tip over Vitest's 5s default under CI load.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
     server: { deps: { inline: ['next-auth'] } },
   },
 });
