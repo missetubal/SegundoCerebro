@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  date,
   index,
   integer,
   pgTable,
@@ -164,5 +165,102 @@ export const horizons = pgTable(
       sql`lower(${horizon.name})`,
     ),
     index('horizon_user_sort_idx').on(horizon.userId, horizon.sortOrder),
+  ],
+);
+
+export const goals = pgTable(
+  'goal',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    primaryAreaId: text('primary_area_id')
+      .notNull()
+      .references(() => areas.id, { onDelete: 'restrict' }),
+    horizonId: text('horizon_id')
+      .notNull()
+      .references(() => horizons.id, { onDelete: 'restrict' }),
+    status: text('status').notNull().default('active'),
+    startDate: date('start_date'),
+    targetDate: date('target_date'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (goal) => [
+    index('goal_user_status_idx').on(goal.userId, goal.status),
+    index('goal_user_primary_area_idx').on(goal.userId, goal.primaryAreaId),
+  ],
+);
+
+export const nextSteps = pgTable(
+  'next_step',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    goalId: text('goal_id')
+      .notNull()
+      .references(() => goals.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    status: text('status').notNull().default('open'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (nextStep) => [index('next_step_goal_idx').on(nextStep.goalId)],
+);
+
+export const habits = pgTable(
+  'habit',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    trackingType: text('tracking_type').notNull(),
+    frequencyKind: text('frequency_kind').notNull(),
+    weekdays: integer('weekdays').array(),
+    targetValue: integer('target_value'),
+    unit: text('unit'),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (habit) => [index('habit_user_archived_idx').on(habit.userId, habit.archivedAt)],
+);
+
+export const habitAreas = pgTable(
+  'habit_area',
+  {
+    habitId: text('habit_id')
+      .notNull()
+      .references(() => habits.id, { onDelete: 'cascade' }),
+    areaId: text('area_id')
+      .notNull()
+      .references(() => areas.id, { onDelete: 'cascade' }),
+  },
+  (habitArea) => [
+    primaryKey({ columns: [habitArea.habitId, habitArea.areaId] }),
   ],
 );

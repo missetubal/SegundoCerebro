@@ -1,5 +1,6 @@
 export { ConfirmDeleteDialog } from './confirm-delete-dialog';
 export { ItemActionButton } from './item-action-button';
+export { KpiTile, type KpiPastel } from './kpi-tile';
 export { MoveButtons } from './move-buttons';
 export {
   bodyText,
