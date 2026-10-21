@@ -1,8 +1,14 @@
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
+  char,
+  check,
   date,
+  foreignKey,
   index,
   integer,
+  jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -387,5 +393,417 @@ export const medicationLogs = pgTable(
       log.scheduledTime,
     ),
     index('medication_log_user_date_idx').on(log.userId, log.entryDate),
+  ],
+);
+
+function timestamps() {
+  return {
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  };
+}
+
+export const financialInstitutions = pgTable(
+  'financial_institution',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    type: text('type').notNull(),
+    ...timestamps(),
+  },
+  (institution) => [
+    uniqueIndex('financial_institution_user_name_unique').on(
+      institution.userId,
+      sql`lower(${institution.name})`,
+    ),
+  ],
+);
+
+export const financialAccounts = pgTable(
+  'financial_account',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    institutionId: text('institution_id')
+      .notNull()
+      .references(() => financialInstitutions.id, { onDelete: 'restrict' }),
+    name: text('name').notNull(),
+    accountType: text('account_type').notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    openingBalanceMinor: bigint('opening_balance_minor', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (account) => [
+    index('financial_account_user_archived_idx').on(
+      account.userId,
+      account.archivedAt,
+    ),
+    check(
+      'financial_account_currency',
+      sql`${account.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+  ],
+);
+
+export const creditCards = pgTable(
+  'credit_card',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    institutionId: text('institution_id')
+      .notNull()
+      .references(() => financialInstitutions.id, { onDelete: 'restrict' }),
+    nickname: text('nickname').notNull(),
+    brand: text('brand'),
+    last4: text('last4'),
+    creditLimitMinor: bigint('credit_limit_minor', { mode: 'bigint' }),
+    closingDay: integer('closing_day').notNull(),
+    dueDay: integer('due_day').notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (card) => [
+    index('credit_card_user_archived_idx').on(card.userId, card.archivedAt),
+    check(
+      'credit_card_days',
+      sql`${card.closingDay} between 1 and 31 and ${card.dueDay} between 1 and 31`,
+    ),
+    check(
+      'credit_card_last4',
+      sql`${card.last4} is null or ${card.last4} ~ '^[0-9]{4}$'`,
+    ),
+    check(
+      'credit_card_currency',
+      sql`${card.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+    check(
+      'credit_card_limit_non_negative',
+      sql`${card.creditLimitMinor} is null or ${card.creditLimitMinor} >= 0`,
+    ),
+  ],
+);
+
+export const statements = pgTable(
+  'statement',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => financialAccounts.id, {
+      onDelete: 'restrict',
+    }),
+    creditCardId: text('credit_card_id').references(() => creditCards.id, {
+      onDelete: 'restrict',
+    }),
+    referenceMonth: date('reference_month').notNull(),
+    periodStart: date('period_start').notNull(),
+    periodEnd: date('period_end').notNull(),
+    dueDate: date('due_date'),
+    declaredTotalMinor: bigint('declared_total_minor', { mode: 'bigint' }),
+    currency: char('currency', { length: 3 }).notNull(),
+    status: text('status').notNull().default('attached'),
+    ...timestamps(),
+  },
+  (statement) => [
+    index('statement_user_month_idx').on(
+      statement.userId,
+      statement.referenceMonth,
+    ),
+    check(
+      'statement_one_owner',
+      sql`(${statement.accountId} is null) <> (${statement.creditCardId} is null)`,
+    ),
+    check(
+      'statement_period',
+      sql`${statement.periodStart} <= ${statement.periodEnd}`,
+    ),
+    check(
+      'statement_currency',
+      sql`${statement.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+  ],
+);
+
+export const statementAttachments = pgTable(
+  'statement_attachment',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    statementId: text('statement_id')
+      .notNull()
+      .references(() => statements.id, { onDelete: 'cascade' }),
+    storageKey: text('storage_key').notNull(),
+    fileName: text('file_name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    checksum: text('checksum').notNull(),
+    ...timestamps(),
+  },
+  (attachment) => [
+    uniqueIndex('statement_attachment_statement_unique').on(
+      attachment.statementId,
+    ),
+  ],
+);
+
+export const importBatches = pgTable(
+  'import_batch',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    statementId: text('statement_id')
+      .notNull()
+      .references(() => statements.id, { onDelete: 'cascade' }),
+    sourceFormat: text('source_format').notNull(),
+    status: text('status').notNull().default('preview'),
+    rowCount: integer('row_count').notNull().default(0),
+    importedCount: integer('imported_count').notNull().default(0),
+    ignoredCount: integer('ignored_count').notNull().default(0),
+    mappingConfig: jsonb('mapping_config'),
+    draftRows: jsonb('draft_rows'),
+    ...timestamps(),
+  },
+  (batch) => [index('import_batch_statement_idx').on(batch.statementId)],
+);
+
+export const transactionCategories = pgTable(
+  'transaction_category',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    color: text('color'),
+    icon: text('icon'),
+    parentId: text('parent_id'),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (category) => [
+    uniqueIndex('transaction_category_user_name_unique').on(
+      category.userId,
+      sql`lower(${category.name})`,
+    ),
+    index('transaction_category_user_archived_idx').on(
+      category.userId,
+      category.archivedAt,
+    ),
+    foreignKey({
+      columns: [category.parentId],
+      foreignColumns: [category.id],
+      name: 'transaction_category_parent_fk',
+    }).onDelete('restrict'),
+  ],
+);
+
+export const transactions = pgTable(
+  'transaction',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').references(() => financialAccounts.id, {
+      onDelete: 'restrict',
+    }),
+    creditCardId: text('credit_card_id').references(() => creditCards.id, {
+      onDelete: 'restrict',
+    }),
+    statementId: text('statement_id').references(() => statements.id, {
+      onDelete: 'restrict',
+    }),
+    importBatchId: text('import_batch_id').references(() => importBatches.id, {
+      onDelete: 'restrict',
+    }),
+    transactionDate: date('transaction_date').notNull(),
+    postedDate: date('posted_date'),
+    description: text('description').notNull(),
+    amountMinor: bigint('amount_minor', { mode: 'bigint' }).notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    direction: text('direction').notNull(),
+    type: text('type').notNull(),
+    categoryId: text('category_id').references(() => transactionCategories.id, {
+      onDelete: 'restrict',
+    }),
+    installmentNumber: integer('installment_number'),
+    installmentTotal: integer('installment_total'),
+    dedupeHash: text('dedupe_hash').notNull(),
+    externalId: text('external_id'),
+    notes: text('notes'),
+    ...timestamps(),
+  },
+  (row) => [
+    index('transaction_user_date_idx').on(row.userId, row.transactionDate),
+    index('transaction_user_account_idx').on(row.userId, row.accountId),
+    index('transaction_user_card_idx').on(row.userId, row.creditCardId),
+    index('transaction_import_batch_idx').on(row.importBatchId),
+    index('transaction_user_dedupe_idx').on(row.userId, row.dedupeHash),
+    index('transaction_user_external_idx').on(row.userId, row.externalId),
+    check(
+      'transaction_one_owner',
+      sql`(${row.accountId} is null) <> (${row.creditCardId} is null)`,
+    ),
+    check('transaction_amount_positive', sql`${row.amountMinor} > 0`),
+    check(
+      'transaction_currency',
+      sql`${row.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+    check(
+      'transaction_direction',
+      sql`(${row.type} = 'expense' and ${row.direction} = 'outflow')
+        or (${row.type} = 'income' and ${row.direction} = 'inflow')
+        or (${row.type} = 'refund' and ${row.direction} = 'inflow')
+        or (${row.type} in ('invoice_payment', 'transfer'))`,
+    ),
+    check(
+      'transaction_installments',
+      sql`(${row.installmentNumber} is null and ${row.installmentTotal} is null)
+        or (
+          ${row.installmentNumber} is not null
+          and ${row.installmentTotal} is not null
+          and ${row.installmentTotal} >= 1
+          and ${row.installmentNumber} between 1 and ${row.installmentTotal}
+        )`,
+    ),
+  ],
+);
+
+export const investmentAssets = pgTable(
+  'investment_asset',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    institutionId: text('institution_id')
+      .notNull()
+      .references(() => financialInstitutions.id, { onDelete: 'restrict' }),
+    name: text('name').notNull(),
+    ticker: text('ticker'),
+    assetClass: text('asset_class').notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    ...timestamps(),
+  },
+  (asset) => [
+    index('investment_asset_user_archived_idx').on(
+      asset.userId,
+      asset.archivedAt,
+    ),
+    check(
+      'investment_asset_currency',
+      sql`${asset.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+  ],
+);
+
+export const investmentTransactions = pgTable(
+  'investment_transaction',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    assetId: text('asset_id')
+      .notNull()
+      .references(() => investmentAssets.id, { onDelete: 'cascade' }),
+    operationType: text('operation_type').notNull(),
+    operationDate: date('operation_date').notNull(),
+    quantity: numeric('quantity', { precision: 20, scale: 8 }).notNull(),
+    unitPriceMinor: bigint('unit_price_minor', { mode: 'bigint' }).notNull(),
+    feesMinor: bigint('fees_minor', { mode: 'bigint' })
+      .notNull()
+      .default(sql`0`),
+    currency: char('currency', { length: 3 }).notNull(),
+    notes: text('notes'),
+    ...timestamps(),
+  },
+  (operation) => [
+    index('investment_transaction_asset_date_idx').on(
+      operation.assetId,
+      operation.operationDate,
+      operation.createdAt,
+    ),
+    check(
+      'investment_transaction_currency',
+      sql`${operation.currency} in ('BRL', 'USD', 'EUR')`,
+    ),
+    check(
+      'investment_transaction_fees_non_negative',
+      sql`${operation.feesMinor} >= 0`,
+    ),
+  ],
+);
+
+export const investmentValuations = pgTable(
+  'investment_valuation',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    assetId: text('asset_id')
+      .notNull()
+      .references(() => investmentAssets.id, { onDelete: 'cascade' }),
+    valuationDate: date('valuation_date').notNull(),
+    unitValueMinor: bigint('unit_value_minor', { mode: 'bigint' }),
+    totalValueMinor: bigint('total_value_minor', { mode: 'bigint' }),
+    source: text('source').notNull().default('manual'),
+    ...timestamps(),
+  },
+  (valuation) => [
+    index('investment_valuation_asset_date_idx').on(
+      valuation.assetId,
+      valuation.valuationDate,
+      valuation.createdAt,
+    ),
+    check(
+      'investment_valuation_one_value',
+      sql`(${valuation.unitValueMinor} is null) <> (${valuation.totalValueMinor} is null)`,
+    ),
+    check('investment_valuation_source', sql`${valuation.source} = 'manual'`),
   ],
 );

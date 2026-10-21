@@ -40,7 +40,7 @@ export function KpiTile({ label, value, hint, pastel }: Props) {
       <span className={`${caption} font-semibold uppercase tracking-wider ${tone.label}`}>
         {label}
       </span>
-      <span className='text-lg font-semibold text-ink'>{value}</span>
+      <span className='text-xl font-semibold tracking-tight text-ink tabular-nums'>{value}</span>
       {hint != null && <span className={caption}>{hint}</span>}
     </div>
   );
