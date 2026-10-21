@@ -1,4 +1,7 @@
 'use client';
+import {
+  FinanceNav,
+} from '@/features/finance';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,7 +17,6 @@ import {
   Target,
   Wallet,
 } from 'lucide-react';
-import { FinanceNav } from '@/features/finance/presentation/finance-nav';
 import { caption } from '@/shared/ui';
 
 export type SidebarArea = {

@@ -8,6 +8,7 @@ import {
 } from './validation';
 
 export const MAX_INCLUDED_ROWS = 2000;
+export const MAX_PREVIEW_ROWS = 5000;
 
 export function csvHeaders(text: string): string[] {
   const headerLine = text.split(/\r?\n/, 1)[0] ?? '';

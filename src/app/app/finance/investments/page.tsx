@@ -1,13 +1,23 @@
+import {
+  todayInTimeZone,
+  formatMinor,
+  isCurrency,
+  ClassDonut,
+  colorAt,
+  EmptyState,
+  FinancePage,
+  Panel,
+  formatDay,
+  formatQuantity,
+  CLASS_LABELS,
+} from '@/features/finance';
+import {
+  listInstitutions,
+  portfolio,
+} from '@/features/finance/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { requireUserId } from '@/features/auth/server';
-import { todayInTimeZone } from '@/features/finance/domain/dates';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
-import { ClassDonut, colorAt } from '@/features/finance/presentation/charts';
-import { EmptyState, FinancePage, Panel } from '@/features/finance/presentation/finance-shell';
-import { formatDay, formatQuantity } from '@/features/finance/presentation/format';
-import { CLASS_LABELS } from '@/features/finance/presentation/labels';
-import { listInstitutions, portfolio } from '@/features/finance/server';
 import { secondaryButton } from '@/shared/ui';
 import { getPreferences } from '@/features/preferences/server';
 

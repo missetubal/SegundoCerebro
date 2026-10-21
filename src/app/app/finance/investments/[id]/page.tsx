@@ -1,17 +1,18 @@
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { todayInTimeZone } from '@/features/finance/domain/dates';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
-import { OperationForm, ValuationForm } from '@/features/finance/presentation/asset-activity-form';
-import { formatDay, formatQuantity } from '@/features/finance/presentation/format';
 import {
+  todayInTimeZone,
+  formatMinor,
+  isCurrency,
+  OperationForm,
+  ValuationForm,
+  formatDay,
+  formatQuantity,
   BackLink,
   EmptyState,
   FinancePage,
   Panel,
-} from '@/features/finance/presentation/finance-shell';
-import { CLASS_LABELS, OPERATION_LABELS } from '@/features/finance/presentation/labels';
+  CLASS_LABELS,
+  OPERATION_LABELS,
+} from '@/features/finance';
 import {
   addOperationAction,
   addValuationAction,
@@ -22,6 +23,9 @@ import {
   listInstitutions,
   portfolio,
 } from '@/features/finance/server';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 import { getPreferences } from '@/features/preferences/server';
 import { ItemActionButton } from '@/shared/ui';
 

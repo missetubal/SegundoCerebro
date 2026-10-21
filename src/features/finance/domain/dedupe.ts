@@ -31,32 +31,33 @@ export function markDuplicates<T extends DedupeIdentity>(
   proposed: T[],
   existing: DuplicateCandidate[],
 ): Array<T & { duplicate: boolean }> {
+  const byExternalId = new Set<string>();
+  const byFingerprint = new Set<string>();
+  for (const saved of existing) {
+    if (saved.externalId) {
+      byExternalId.add(`${saved.instrumentKind}|${saved.instrumentId}|${saved.externalId}`);
+    }
+    byFingerprint.add(fingerprint(saved));
+  }
   return proposed.map((line) => ({
     ...line,
-    duplicate: existing.some((saved) => isDuplicate(line, saved)),
+    duplicate:
+      (line.externalId !== null &&
+        byExternalId.has(
+          `${line.instrumentKind}|${line.instrumentId}|${line.externalId}`,
+        )) ||
+      byFingerprint.has(fingerprint(line)),
   }));
 }
 
-function isDuplicate(line: DedupeIdentity, saved: DuplicateCandidate): boolean {
-  if (
-    line.instrumentKind !== saved.instrumentKind ||
-    line.instrumentId !== saved.instrumentId
-  ) {
-    return false;
-  }
-  if (
-    line.externalId &&
-    saved.externalId &&
-    line.externalId === saved.externalId
-  ) {
-    return true;
-  }
-  return (
-    line.transactionDate === saved.transactionDate &&
-    line.amountMinor === saved.amountMinor &&
-    normalizeDescription(line.description) ===
-      normalizeDescription(saved.description)
-  );
+function fingerprint(identity: DedupeIdentity): string {
+  return [
+    identity.instrumentKind,
+    identity.instrumentId,
+    identity.transactionDate,
+    identity.amountMinor.toString(),
+    normalizeDescription(identity.description),
+  ].join('|');
 }
 
 export function signedAmountMatches(

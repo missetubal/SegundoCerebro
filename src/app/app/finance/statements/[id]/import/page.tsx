@@ -1,11 +1,8 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import { FileText } from 'lucide-react';
-import { requireUserId } from '@/features/auth/server';
-import { FinancePage } from '@/features/finance/presentation/finance-shell';
-import { ImportReview } from '@/features/finance/presentation/import-review';
-import { ImportStepper } from '@/features/finance/presentation/import-steps';
+import {
+  FinancePage,
+  ImportReview,
+  ImportStepper,
+} from '@/features/finance';
 import {
   confirmImportAction,
   getStatement,
@@ -13,6 +10,11 @@ import {
   listCategories,
   startPreviewAction,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { FileText } from 'lucide-react';
+import { requireUserId } from '@/features/auth/server';
 import { card, secondaryButton } from '@/shared/ui';
 
 export default function ImportPage({ params }: { params: Promise<{ id: string }> }) {

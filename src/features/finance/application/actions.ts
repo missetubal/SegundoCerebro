@@ -211,7 +211,9 @@ export async function updateCategoryAction(
   const userId = await requireUserId();
   const id = itemIdSchema.safeParse(formData.get('id'));
   if (!id.success) return errorState(ACTION_MESSAGES.notFound);
-  const input = categoryInputSchema.safeParse(formObject(formData));
+  const values = formObject(formData);
+  delete values.id;
+  const input = categoryInputSchema.safeParse(values);
   if (!input.success) {
     return errorState(firstIssueMessage(input.error, 'Revise os campos.'));
   }
@@ -267,7 +269,9 @@ export async function updateTransactionAction(
   const userId = await requireUserId();
   const id = itemIdSchema.safeParse(formData.get('id'));
   if (!id.success) return errorState(ACTION_MESSAGES.notFound);
-  const input = transactionInputSchema.safeParse(formObject(formData));
+  const values = formObject(formData);
+  delete values.id;
+  const input = transactionInputSchema.safeParse(values);
   if (!input.success) {
     return errorState(firstIssueMessage(input.error, 'Revise os campos.'));
   }
@@ -288,6 +292,19 @@ export async function deleteTransactionAction(
   if (!found) return errorState(ACTION_MESSAGES.notFound);
   refresh();
   return SUCCESS_STATE;
+}
+
+export async function deleteTransactionAndRedirectAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const userId = await requireUserId();
+  const id = itemIdSchema.safeParse(formData.get('id'));
+  if (!id.success) return errorState(ACTION_MESSAGES.notFound);
+  const found = await deleteTransaction(userId, id.data);
+  if (!found) return errorState(ACTION_MESSAGES.notFound);
+  refresh();
+  redirect('/app/finance/transactions');
 }
 
 export async function assignCategoryAction(

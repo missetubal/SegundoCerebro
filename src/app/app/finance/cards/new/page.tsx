@@ -1,8 +1,15 @@
+import {
+  BackLink,
+  FinancePage,
+  FormShell,
+} from '@/features/finance';
+import {
+  createCardAction,
+  listInstitutions,
+} from '@/features/finance/server';
 import { Suspense } from 'react';
 import { requireUserId } from '@/features/auth/server';
 import { CardForm } from '@/features/finance';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
-import { createCardAction, listInstitutions } from '@/features/finance/server';
 
 export default function NewCardPage() {
   return (

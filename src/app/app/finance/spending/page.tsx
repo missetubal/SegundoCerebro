@@ -1,17 +1,32 @@
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
 import {
+  filterByOrigin,
+  spendingByMonth,
   totalsByCategory,
   totalsByInstrument,
   type LedgerRow,
-} from '@/features/finance/domain/aggregation';
-import { monthInTimeZone } from '@/features/finance/domain/dates';
-import { formatMinor, isCurrency, type Currency } from '@/features/finance/domain/money';
-import { CategoryBars, MonthBars, SpendingTable } from '@/features/finance/presentation/charts';
-import { FinancePage, Panel } from '@/features/finance/presentation/finance-shell';
-import { formatMonth, monthBounds, shiftMonth, shortMonth } from '@/features/finance/presentation/format';
-import { ViewToggle } from '@/features/finance/presentation/view-toggle';
-import { listAccounts, listCards, listCategories, listTransactions } from '@/features/finance/server';
+  monthInTimeZone,
+  formatMinor,
+  isCurrency,
+  type Currency,
+  CategoryBars,
+  MonthBars,
+  SpendingTable,
+  FinancePage,
+  Panel,
+  formatMonth,
+  monthBounds,
+  shiftMonth,
+  shortMonth,
+  ViewToggle,
+} from '@/features/finance';
+import {
+  listAccounts,
+  listCards,
+  listCategories,
+  listTransactions,
+} from '@/features/finance/server';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 import { getPreferences } from '@/features/preferences/server';
 import { card, secondaryButton, textInput } from '@/shared/ui';
 
@@ -56,7 +71,10 @@ async function Spending({ searchParams }: { searchParams: Promise<Search> }) {
     const ledger = toLedger(row, categoryNames);
     return ledger ? [{ ...ledger, month: row.transactionDate.slice(0, 7) }] : [];
   });
-  const selected = dated.filter((row) => row.month === month);
+  const selected = filterByOrigin(
+    dated.filter((row) => row.month === month),
+    origin,
+  );
   const currencies = [...new Set(selected.map((row) => row.currency))].filter(
     (currency) => !params.currency || currency === params.currency,
   );
@@ -118,12 +136,9 @@ async function Spending({ searchParams }: { searchParams: Promise<Search> }) {
       <Panel title='Gastos por mês' description='Evolução dos últimos seis meses.'>
         {seriesCurrencies.length === 0 && <p className='text-sm text-muted'>Nenhum gasto neste mês.</p>}
         {seriesCurrencies.map((currency) => {
-          const series = months.map((item) => ({
-            name: shortMonth(item),
-            amountMinor: totalsByCategory(
-              dated.filter((row) => row.month === item && row.currency === currency),
-              currency,
-            ).reduce((sum, row) => sum + row.amountMinor, 0n),
+          const series = spendingByMonth(dated, months, currency, origin).map((item) => ({
+            name: shortMonth(item.month),
+            amountMinor: item.amountMinor,
           }));
           return (
             <ViewToggle

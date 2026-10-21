@@ -1,8 +1,15 @@
+import {
+  AssetForm,
+  BackLink,
+  FinancePage,
+  FormShell,
+} from '@/features/finance';
+import {
+  createAssetAction,
+  listInstitutions,
+} from '@/features/finance/server';
 import { Suspense } from 'react';
 import { requireUserId } from '@/features/auth/server';
-import { AssetForm } from '@/features/finance/presentation/asset-form';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
-import { createAssetAction, listInstitutions } from '@/features/finance/server';
 
 export default function NewAssetPage() {
   return (

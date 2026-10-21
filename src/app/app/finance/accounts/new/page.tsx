@@ -1,8 +1,15 @@
+import {
+  BackLink,
+  FinancePage,
+  FormShell,
+} from '@/features/finance';
+import {
+  createAccountAction,
+  listInstitutions,
+} from '@/features/finance/server';
 import { Suspense } from 'react';
 import { requireUserId } from '@/features/auth/server';
 import { AccountForm } from '@/features/finance';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
-import { createAccountAction, listInstitutions } from '@/features/finance/server';
 
 export default function NewAccountPage() {
   return (

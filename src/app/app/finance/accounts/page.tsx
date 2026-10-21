@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { CreditCard, Landmark } from 'lucide-react';
-import { requireUserId } from '@/features/auth/server';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
-import { CreateInstrumentDialogs } from '@/features/finance/presentation/create-dialogs';
-import { EmptyState, FinancePage } from '@/features/finance/presentation/finance-shell';
+import {
+  formatMinor,
+  isCurrency,
+  CreateInstrumentDialogs,
+  EmptyState,
+  FinancePage,
+} from '@/features/finance';
 import {
   archiveAccountAction,
   archiveCardAction,
@@ -16,6 +16,10 @@ import {
   listCards,
   listInstitutions,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { CreditCard, Landmark } from 'lucide-react';
+import { requireUserId } from '@/features/auth/server';
 import { ItemActionButton, card, secondaryButton } from '@/shared/ui';
 
 export default function AccountsPage() {

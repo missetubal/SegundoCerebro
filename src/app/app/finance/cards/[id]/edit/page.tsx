@@ -1,9 +1,17 @@
+import {
+  BackLink,
+  FinancePage,
+  FormShell,
+} from '@/features/finance';
+import {
+  getCard,
+  listInstitutions,
+  updateCardAction,
+} from '@/features/finance/server';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { requireUserId } from '@/features/auth/server';
 import { CardForm } from '@/features/finance';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
-import { getCard, listInstitutions, updateCardAction } from '@/features/finance/server';
 
 export default function EditCardPage({
   params,

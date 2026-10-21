@@ -1,12 +1,13 @@
 import 'server-only';
 
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import {
   db,
   importBatches,
   ownedBy,
   statementAttachments,
   statements,
+  transactionCategories,
   transactions,
 } from '@/shared/db';
 import {
@@ -14,6 +15,9 @@ import {
   markDuplicates,
   csvHeaders,
   MAX_INCLUDED_ROWS,
+  MAX_PREVIEW_ROWS,
+  TRANSACTION_TYPES,
+  DIRECTIONS,
   parseCsv,
   parseOfx,
   reconcileIncluded,
@@ -81,7 +85,10 @@ export async function startPreview(
   store: BlobStore = defaultBlobStore(),
 ): Promise<
   | { ok: true; batchId: string; lines: ImportLine[] }
-  | { ok: false; reason: 'not_found' | 'mapping_required' | 'unsupported' }
+  | {
+      ok: false;
+      reason: 'not_found' | 'mapping_required' | 'unsupported' | 'too_large';
+    }
 > {
   const statement = await ownedStatement(userId, statementId);
   if (!statement) return { ok: false, reason: 'not_found' };
@@ -105,10 +112,20 @@ export async function startPreview(
       reason: parsed.reason === 'mapping_required' ? 'mapping_required' : 'unsupported',
     };
   }
+  if (parsed.lines.length > MAX_PREVIEW_ROWS) {
+    return { ok: false, reason: 'too_large' };
+  }
   const existing = await db
     .select()
     .from(transactions)
-    .where(eq(transactions.userId, userId));
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        statement.accountId
+          ? eq(transactions.accountId, statement.accountId)
+          : eq(transactions.creditCardId, statement.creditCardId ?? ''),
+      ),
+    );
   const marked = markDuplicates(
     parsed.lines.map((line) => ({
       ...line,
@@ -175,12 +192,43 @@ export async function confirmImport(
   batchId: string,
   lines: ImportLine[],
 ): Promise<FinanceResult<{ imported: number }>> {
+  if (!Array.isArray(lines) || lines.some((line) => !isValidLine(line))) {
+    return { ok: false, reason: 'not_found' };
+  }
   const batch = await ownedBatch(userId, batchId);
   if (!batch || batch.status !== 'preview') return { ok: false, reason: 'not_found' };
   const statement = await ownedStatement(userId, batch.statementId);
   if (!statement) return { ok: false, reason: 'not_found' };
   const included = lines.filter((line) => line.included && !line.incompatibleCurrency);
   if (included.length > MAX_INCLUDED_ROWS) return { ok: false, reason: 'not_found' };
+  const categoryIds = [
+    ...new Set(
+      included.flatMap((line) => (line.categoryId ? [line.categoryId] : [])),
+    ),
+  ];
+  if (categoryIds.length > 0) {
+    const owned = await db
+      .select({ id: transactionCategories.id })
+      .from(transactionCategories)
+      .where(
+        and(
+          eq(transactionCategories.userId, userId),
+          inArray(transactionCategories.id, categoryIds),
+          isNull(transactionCategories.archivedAt),
+        ),
+      );
+    if (owned.length !== categoryIds.length) {
+      return { ok: false, reason: 'not_found' };
+    }
+  }
+  const [claimed] = await db
+    .update(importBatches)
+    .set({ status: 'processing', updatedAt: sql`now()` })
+    .where(
+      and(ownedBy(importBatches, userId, batch.id), eq(importBatches.status, 'preview')),
+    )
+    .returning({ id: importBatches.id });
+  if (!claimed) return { ok: false, reason: 'not_found' };
   const instrumentKind = statement.accountId ? 'account' : 'card';
   const instrumentId = statement.accountId ?? statement.creditCardId ?? '';
   const inserts = included.map((line) =>
@@ -235,9 +283,52 @@ export async function confirmImport(
   } catch (error) {
     console.error('finance import confirm failed');
     void error;
+    await db
+      .update(importBatches)
+      .set({ status: 'preview', updatedAt: sql`now()` })
+      .where(
+        and(
+          ownedBy(importBatches, userId, batch.id),
+          eq(importBatches.status, 'processing'),
+        ),
+      )
+      .catch(() => undefined);
     return { ok: false, reason: 'not_found' };
   }
   return { ok: true, item: { imported: included.length } };
+}
+
+const TRANSACTION_TYPE_SET: ReadonlySet<string> = new Set(TRANSACTION_TYPES);
+const DIRECTION_SET: ReadonlySet<string> = new Set(DIRECTIONS);
+
+function isValidCalendarDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.toISOString().slice(0, 10) === value;
+}
+
+function isValidLine(line: ImportLine): boolean {
+  if (!line || typeof line !== 'object') return false;
+  if (!isValidCalendarDate(line.transactionDate)) return false;
+  if (line.postedDate !== null && !isValidCalendarDate(line.postedDate)) return false;
+  if (typeof line.description !== 'string') return false;
+  const description = line.description.trim();
+  if (description.length === 0 || description.length > 200) return false;
+  if (typeof line.amountMinor !== 'bigint' || line.amountMinor <= 0n) return false;
+  if (!TRANSACTION_TYPE_SET.has(line.type) || !DIRECTION_SET.has(line.direction)) {
+    return false;
+  }
+  if (line.type === 'expense' && line.direction !== 'outflow') return false;
+  if (
+    (line.type === 'income' || line.type === 'refund') &&
+    line.direction !== 'inflow'
+  ) {
+    return false;
+  }
+  if (line.externalId !== null && typeof line.externalId !== 'string') return false;
+  if (line.categoryId !== null && typeof line.categoryId !== 'string') return false;
+  return true;
 }
 
 export async function undoImport(

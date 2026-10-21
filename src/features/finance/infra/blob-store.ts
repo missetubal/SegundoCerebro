@@ -88,8 +88,9 @@ export function createMemoryBlobStore(): BlobStore {
 const DISK_ROOT = path.join(process.cwd(), '.data', 'finance-blobs');
 
 function diskPath(pathname: string) {
-  const full = path.resolve(DISK_ROOT, pathname.replace(/^\/+/, ''));
-  if (!full.startsWith(path.resolve(DISK_ROOT))) {
+  const root = path.resolve(DISK_ROOT);
+  const full = path.resolve(root, pathname.replace(/^\/+/, ''));
+  if (full !== root && !full.startsWith(root + path.sep)) {
     throw new Error('finance statement upload failed');
   }
   return full;

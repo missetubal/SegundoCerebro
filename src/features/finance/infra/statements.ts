@@ -97,7 +97,7 @@ export async function createStatement(
   let stored: { pathname: string };
   try {
     stored = await store.put(
-      `finance/${userId}/${checksum}-${file.name}`,
+      `finance/${userId}/${checksum}-${storageName(file.name)}`,
       Buffer.from(file.bytes),
       file.type,
     );
@@ -107,31 +107,37 @@ export async function createStatement(
     return { ok: false, reason: 'not_found' };
   }
   try {
-    const [statement] = await db
-      .insert(statements)
-      .values({
+    const statementId = crypto.randomUUID();
+    const [created] = await db.batch([
+      db
+        .insert(statements)
+        .values({
+          id: statementId,
+          userId,
+          accountId: input.accountId,
+          creditCardId: input.creditCardId,
+          referenceMonth: monthDate(input.referenceMonth),
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
+          dueDate: input.dueDate,
+          declaredTotalMinor: input.declaredTotal,
+          currency: owner.currency,
+          status: 'attached',
+        })
+        .returning(),
+      db.insert(statementAttachments).values({
+        id: crypto.randomUUID(),
         userId,
-        accountId: input.accountId,
-        creditCardId: input.creditCardId,
-        referenceMonth: monthDate(input.referenceMonth),
-        periodStart: input.periodStart,
-        periodEnd: input.periodEnd,
-        dueDate: input.dueDate,
-        declaredTotalMinor: input.declaredTotal,
-        currency: owner.currency,
-        status: 'attached',
-      })
-      .returning();
+        statementId,
+        storageKey: stored.pathname,
+        fileName: file.name,
+        mimeType: file.type,
+        sizeBytes: file.bytes.byteLength,
+        checksum,
+      }),
+    ]);
+    const statement = created[0];
     if (!statement) return { ok: false, reason: 'not_found' };
-    await db.insert(statementAttachments).values({
-      userId,
-      statementId: statement.id,
-      storageKey: stored.pathname,
-      fileName: file.name,
-      mimeType: file.type,
-      sizeBytes: file.bytes.byteLength,
-      checksum,
-    });
     return { ok: true, item: toView(statement, { fileName: file.name, mimeType: file.type, sizeBytes: file.bytes.byteLength }) };
   } catch (error) {
     console.error('finance statement upload failed');
@@ -203,7 +209,7 @@ export async function replaceAttachment(
   if (!attachment) return false;
   const checksum = createHash('sha256').update(file.bytes).digest('hex');
   const stored = await store.put(
-    `finance/${userId}/${checksum}-${file.name}`,
+    `finance/${userId}/${checksum}-${storageName(file.name)}`,
     Buffer.from(file.bytes),
     file.type,
   );
@@ -245,13 +251,28 @@ export async function deleteAttachmentAndImported(
       and(eq(importBatches.userId, userId), eq(importBatches.statementId, statementId)),
     );
   if (batches.length > 0) {
-    await db.delete(transactions).where(
-      and(
-        eq(transactions.userId, userId),
-        eq(transactions.statementId, statementId),
-        sql`${transactions.importBatchId} is not null`,
+    await db.batch([
+      db.delete(transactions).where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.statementId, statementId),
+          sql`${transactions.importBatchId} is not null`,
+        ),
       ),
-    );
+      db
+        .update(importBatches)
+        .set({ status: 'undone', draftRows: null, updatedAt: sql`now()` })
+        .where(
+          and(
+            eq(importBatches.userId, userId),
+            eq(importBatches.statementId, statementId),
+          ),
+        ),
+      db
+        .update(statements)
+        .set({ status: 'attached', updatedAt: sql`now()` })
+        .where(ownedBy(statements, userId, statementId)),
+    ]);
   }
   return deleteAttachment(userId, statementId, store);
 }
@@ -271,6 +292,12 @@ export async function markStatementReviewed(
     )
     .returning({ id: statements.id });
   return rows.length > 0;
+}
+
+function storageName(fileName: string): string {
+  const base = fileName.split(/[\\/]/).pop() ?? 'file';
+  const cleaned = base.replace(/[^\w.\-]+/g, '_').replace(/^\.+/, '');
+  return cleaned === '' ? 'file' : cleaned;
 }
 
 function monthDate(month: string) {

@@ -27,6 +27,7 @@ import {
   createStatement,
   deleteAttachment,
   deleteAttachmentAndImported,
+  markStatementReviewed,
   replaceAttachment,
 } from '../infra/statements';
 
@@ -139,6 +140,9 @@ export async function startPreviewAction(
     if (preview.reason === 'unsupported') {
       return errorState('O arquivo continua guardado. Esta versão não lê PDF nem imagem.');
     }
+    if (preview.reason === 'too_large') {
+      return errorState('Arquivo com linhas demais. Divida o arquivo e tente de novo.');
+    }
     return errorState(FAILURE);
   }
   return {
@@ -171,8 +175,22 @@ export async function confirmImportAction(
     void error;
     return errorState(FAILURE);
   }
+  if (!Array.isArray(lines)) return errorState(FAILURE);
   const saved = await confirmImport(userId, batchId.data, lines);
   if (!saved.ok) return errorState('Não foi possível salvar a importação.');
+  refresh();
+  return SUCCESS_STATE;
+}
+
+export async function markStatementReviewedAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const userId = await requireUserId();
+  const id = itemIdSchema.safeParse(formData.get('id'));
+  if (!id.success) return errorState(ACTION_MESSAGES.notFound);
+  const found = await markStatementReviewed(userId, id.data);
+  if (!found) return errorState(ACTION_MESSAGES.notFound);
   refresh();
   return SUCCESS_STATE;
 }

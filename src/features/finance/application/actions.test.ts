@@ -43,7 +43,7 @@ describe('finance actions', () => {
 
     await expect(
       createCardAction(IDLE_STATE, cardForm({ userId: other })),
-    ).rejects.toThrow('NEXT_REDIRECT:/app/finance/cards');
+    ).rejects.toThrow('NEXT_REDIRECT:/app/finance/accounts#cartoes');
     const ownerCards = await listCards(owner);
     const otherCards = await listCards(other);
     expect(ownerCards.active).toHaveLength(1);

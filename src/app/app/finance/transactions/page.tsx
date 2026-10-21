@@ -1,12 +1,12 @@
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { Search } from 'lucide-react';
-import { requireUserId } from '@/features/auth/server';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
-import { BulkCategoryForm } from '@/features/finance/presentation/bulk-category-form';
-import { FinancePage, Panel } from '@/features/finance/presentation/finance-shell';
-import { formatDay } from '@/features/finance/presentation/format';
-import { TYPE_LABELS } from '@/features/finance/presentation/labels';
+import {
+  formatMinor,
+  isCurrency,
+  BulkCategoryForm,
+  FinancePage,
+  Panel,
+  formatDay,
+  TYPE_LABELS,
+} from '@/features/finance';
 import {
   assignCategoryAction,
   listAccounts,
@@ -14,6 +14,10 @@ import {
   listCategories,
   listTransactions,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { Search } from 'lucide-react';
+import { requireUserId } from '@/features/auth/server';
 import { secondaryButton, textInput } from '@/shared/ui';
 
 type SearchParams = {
@@ -172,6 +176,7 @@ async function TransactionList({ searchParams }: { searchParams: Promise<SearchP
             : row.amountMinor.toString();
           return {
             id: row.id,
+            editHref: `/app/finance/transactions/${row.id}/edit`,
             date: formatDay(row.transactionDate),
             description: row.description,
             category: row.categoryId ? (names.get(row.categoryId) ?? 'Sem categoria') : 'Sem categoria',

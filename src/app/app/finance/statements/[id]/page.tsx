@@ -1,22 +1,18 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import { Download, FileText } from 'lucide-react';
-import { requireUserId } from '@/features/auth/server';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
 import {
+  formatMinor,
+  isCurrency,
   BackLink,
   EmptyState,
   FinancePage,
   Panel,
   StatusPill,
-} from '@/features/finance/presentation/finance-shell';
-import { formatDay, formatMonth } from '@/features/finance/presentation/format';
-import {
+  formatDay,
+  formatMonth,
+  MarkReviewedButton,
   StatementDeleteForms,
   ReplaceFileForm,
   UndoBatchButton,
-} from '@/features/finance/presentation/statement-actions';
+} from '@/features/finance';
 import {
   deleteAttachmentAction,
   deleteImportedAction,
@@ -24,9 +20,15 @@ import {
   listAccounts,
   listBatches,
   listCards,
+  markStatementReviewedAction,
   replaceAttachmentAction,
   undoImportAction,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { Download, FileText } from 'lucide-react';
+import { requireUserId } from '@/features/auth/server';
 import { primaryButton, secondaryButton } from '@/shared/ui';
 
 const STATUS: Record<string, { label: string; tone: 'neutral' | 'success' | 'info' }> = {
@@ -94,7 +96,17 @@ async function StatementDetail({ params }: { params: Promise<{ id: string }> }) 
       <BackLink href='/app/finance/statements' label='Voltar às faturas' />
       <Panel
         title='Resumo'
-        action={<StatusPill tone={status.tone}>{status.label}</StatusPill>}
+        action={
+          <span className='flex flex-wrap items-center gap-2'>
+            <StatusPill tone={status.tone}>{status.label}</StatusPill>
+            {statement.status === 'imported' && (
+              <MarkReviewedButton
+                statementId={statement.id}
+                action={markStatementReviewedAction}
+              />
+            )}
+          </span>
+        }
       >
         <dl className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
           {facts.map((fact) => (

@@ -1,6 +1,10 @@
+import {
+  defaultBlobStore,
+  localBlobKey,
+  getStatement,
+  signedStatementUrl,
+} from '@/features/finance/server';
 import { auth } from '@/features/auth/server';
-import { defaultBlobStore, localBlobKey } from '@/features/finance/infra/blob-store';
-import { getStatement, signedStatementUrl } from '@/features/finance/server';
 
 type FileContext = { params: Promise<{ id: string }> };
 
@@ -17,7 +21,12 @@ export async function GET(
   const key = localBlobKey(url);
   if (!key) return Response.redirect(url, 302);
   const statement = await getStatement(userId, id);
-  const bytes = await defaultBlobStore().read(key);
+  let bytes: Uint8Array;
+  try {
+    bytes = await defaultBlobStore().read(key);
+  } catch {
+    return new Response(null, { status: 404 });
+  }
   const fileName = (statement?.fileName ?? 'fatura').replace(/["\r\n]/g, '');
   return new Response(Buffer.from(bytes), {
     headers: {

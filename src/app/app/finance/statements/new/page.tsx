@@ -1,17 +1,19 @@
-import Link from 'next/link';
-import { List } from 'lucide-react';
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { monthInTimeZone } from '@/features/finance/domain/dates';
-import { FinancePage } from '@/features/finance/presentation/finance-shell';
-import { formatMonth } from '@/features/finance/presentation/format';
-import { StatementForm } from '@/features/finance/presentation/statement-form';
+import {
+  monthInTimeZone,
+  FinancePage,
+  formatMonth,
+  StatementForm,
+} from '@/features/finance';
 import {
   createStatementAction,
   listAccounts,
   listCards,
   listStatements,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { List } from 'lucide-react';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 import { getPreferences } from '@/features/preferences/server';
 import { card, caption } from '@/shared/ui';
 

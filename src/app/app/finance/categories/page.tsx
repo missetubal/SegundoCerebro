@@ -1,16 +1,17 @@
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { CategoryForm } from '@/features/finance/presentation/category-form';
 import {
+  CategoryForm,
   EmptyState,
   FinancePage,
   Panel,
-} from '@/features/finance/presentation/finance-shell';
+} from '@/features/finance';
 import {
   archiveCategoryAction,
   createCategoryAction,
   listCategories,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 import { ItemActionButton } from '@/shared/ui';
 
 const ACTION_CLASS =
@@ -51,14 +52,19 @@ async function Categories() {
                 className='flex min-h-11 items-center justify-between gap-3 border-b border-border py-1.5 last:border-b-0'
               >
                 <span className='text-sm font-medium text-ink'>{category.name}</span>
-                <ItemActionButton
+                <span className='flex items-center gap-1'>
+                  <Link href={`/app/finance/categories/${category.id}/edit`} className={ACTION_CLASS}>
+                    Editar
+                  </Link>
+                  <ItemActionButton
                   action={archiveCategoryAction}
                   id={category.id}
                   label='Arquivar'
                   className={ACTION_CLASS}
-                >
-                  Arquivar
-                </ItemActionButton>
+                  >
+                    Arquivar
+                  </ItemActionButton>
+                </span>
               </li>
             ))}
           </ul>

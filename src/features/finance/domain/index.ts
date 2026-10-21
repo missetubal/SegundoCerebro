@@ -11,14 +11,18 @@ export {
   currenciesIn,
   reconcileIncluded,
   summarizePeriod,
+  filterByOrigin,
+  spendingByMonth,
   totalsByCategory,
   totalsByInstrument,
   UNCATEGORIZED_LABEL,
   type LedgerRow,
+  type SpendingOrigin,
   type MoneyTotals,
   type NamedTotal,
   type Reconciliation,
 } from './aggregation';
+export { monthInTimeZone, nextDueDate, todayInTimeZone } from './dates';
 export {
   dedupeHash,
   markDuplicates,
@@ -40,6 +44,7 @@ export {
 export {
   csvHeaders,
   MAX_INCLUDED_ROWS,
+  MAX_PREVIEW_ROWS,
   parseCsv,
   parseOfx,
   suggestType,

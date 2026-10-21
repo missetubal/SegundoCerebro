@@ -1,13 +1,17 @@
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
-import { TransactionForm } from '@/features/finance/presentation/transaction-form';
+import {
+  BackLink,
+  FinancePage,
+  FormShell,
+  TransactionForm,
+} from '@/features/finance';
 import {
   createTransactionAction,
   listAccounts,
   listCards,
   listCategories,
 } from '@/features/finance/server';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 
 export default function NewTransactionPage() {
   return (

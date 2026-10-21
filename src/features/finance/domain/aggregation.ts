@@ -96,6 +96,35 @@ export function totalsByInstrument(
   }));
 }
 
+export type SpendingOrigin = 'all' | 'account' | 'card';
+
+export function filterByOrigin<T extends Pick<LedgerRow, 'accountId' | 'creditCardId'>>(
+  rows: T[],
+  origin: SpendingOrigin,
+): T[] {
+  if (origin === 'account') return rows.filter((row) => row.accountId !== null);
+  if (origin === 'card') return rows.filter((row) => row.creditCardId !== null);
+  return rows;
+}
+
+export function spendingByMonth(
+  rows: Array<LedgerRow & { month: string }>,
+  months: string[],
+  currency: Currency,
+  origin: SpendingOrigin,
+): Array<{ month: string; amountMinor: bigint }> {
+  return months.map((month) => ({
+    month,
+    amountMinor: totalsByCategory(
+      filterByOrigin(
+        rows.filter((row) => row.month === month && row.currency === currency),
+        origin,
+      ),
+      currency,
+    ).reduce((sum, row) => sum + row.amountMinor, 0n),
+  }));
+}
+
 export function accountBalance(
   openingBalanceMinor: bigint,
   rows: LedgerRow[],

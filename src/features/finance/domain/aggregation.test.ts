@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountBalance,
+  filterByOrigin,
+  spendingByMonth,
   summarizePeriod,
   totalsByCategory,
   totalsByInstrument,
@@ -20,6 +22,35 @@ function row(overrides: Partial<LedgerRow> & Pick<LedgerRow, 'type' | 'amountMin
 }
 
 describe('aggregation', () => {
+  it('filters spending rows by origin', () => {
+    const rows = [
+      row({ type: 'expense', amountMinor: 1000n, accountId: 'a1', creditCardId: null }),
+      row({ type: 'expense', amountMinor: 2000n, accountId: null, creditCardId: 'c1' }),
+    ];
+    expect(filterByOrigin(rows, 'all')).toHaveLength(2);
+    expect(filterByOrigin(rows, 'account').map((item) => item.amountMinor)).toEqual([1000n]);
+    expect(filterByOrigin(rows, 'card').map((item) => item.amountMinor)).toEqual([2000n]);
+  });
+
+  it('sums monthly spending net of refunds for one currency and origin', () => {
+    const rows = [
+      { ...row({ type: 'expense', amountMinor: 4000n }), month: '2026-04' },
+      { ...row({ type: 'refund', amountMinor: 1000n }), month: '2026-04' },
+      { ...row({ type: 'income', amountMinor: 9000n }), month: '2026-04' },
+      {
+        ...row({ type: 'expense', amountMinor: 500n, accountId: null, creditCardId: 'c1' }),
+        month: '2026-05',
+      },
+    ];
+    expect(spendingByMonth(rows, ['2026-04', '2026-05'], 'BRL', 'account')).toEqual([
+      { month: '2026-04', amountMinor: 3000n },
+      { month: '2026-05', amountMinor: 0n },
+    ]);
+    expect(spendingByMonth(rows, ['2026-05'], 'BRL', 'card')).toEqual([
+      { month: '2026-05', amountMinor: 500n },
+    ]);
+  });
+
   it('nets refunds and keeps payments out of spending and income', () => {
     const rows = [
       row({ type: 'income', amountMinor: 10000n, categoryName: null }),

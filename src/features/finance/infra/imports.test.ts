@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { db, transactions } from '@/shared/db';
 import { createUserFixtures } from '@/test/fixtures';
 import { createAccount, createInstitution } from './accounts';
-import { createTransaction as addManual } from './ledger';
+import { createCategory, createTransaction as addManual } from './ledger';
 import { createMemoryBlobStore } from './blob-store';
 import { createStatement } from './statements';
 import {
@@ -13,7 +13,7 @@ import {
   undoImport,
   type ImportLine,
 } from './imports';
-import { MAX_INCLUDED_ROWS } from '../domain';
+import { MAX_INCLUDED_ROWS, MAX_PREVIEW_ROWS } from '../domain';
 
 const fixtures = createUserFixtures();
 afterAll(() => fixtures.cleanup());
@@ -22,7 +22,7 @@ const csv = new TextEncoder().encode(
   'data;descricao;valor\n02/04/2026;Padaria;-18,90\n03/04/2026;Uber;-20,00\n',
 );
 
-async function seed(userId: string) {
+async function seed(userId: string, bytes: Uint8Array = csv) {
   const institution = await createInstitution(userId, {
     name: `Imp ${crypto.randomUUID().slice(0, 6)}`,
     type: 'bank',
@@ -49,7 +49,7 @@ async function seed(userId: string) {
       dueDate: null,
       declaredTotal: 10000n,
     },
-    { name: 'extrato.csv', type: 'text/csv', bytes: csv },
+    { name: 'extrato.csv', type: 'text/csv', bytes },
     store,
   );
   if (!statement.ok) throw new Error('statement');
@@ -138,6 +138,83 @@ describe('imports', () => {
     expect(saved.ok).toBe(false);
     const rows = await db.select().from(transactions).where(eq(transactions.userId, userId));
     expect(rows).toHaveLength(0);
+  });
+
+  it('rejects a category owned by another user without writing', async () => {
+    const userId = await fixtures.createUser();
+    const otherId = await fixtures.createUser();
+    const { statement, store } = await seed(userId);
+    const category = await createCategory(otherId, {
+      name: 'Alheia',
+      color: null,
+      icon: null,
+      parentId: null,
+    });
+    if (!category.ok) throw new Error('category');
+    const preview = await startPreview(
+      userId,
+      statement.id,
+      {
+        dateColumn: 'data',
+        descriptionColumn: 'descricao',
+        amountColumn: 'valor',
+      },
+      store,
+    );
+    if (!preview.ok) throw new Error('preview');
+    const edited = preview.lines.map((line) => ({
+      ...line,
+      categoryId: category.item.id,
+    }));
+    const saved = await confirmImport(userId, preview.batchId, edited);
+    expect(saved.ok).toBe(false);
+    const rows = await db.select().from(transactions).where(eq(transactions.userId, userId));
+    expect(rows).toHaveLength(0);
+  });
+
+  it('refuses a second confirm of the same batch', async () => {
+    const userId = await fixtures.createUser();
+    const { statement, store } = await seed(userId);
+    const preview = await startPreview(
+      userId,
+      statement.id,
+      {
+        dateColumn: 'data',
+        descriptionColumn: 'descricao',
+        amountColumn: 'valor',
+      },
+      store,
+    );
+    if (!preview.ok) throw new Error('preview');
+    const first = await confirmImport(userId, preview.batchId, preview.lines);
+    expect(first).toEqual({ ok: true, item: { imported: 2 } });
+    const second = await confirmImport(userId, preview.batchId, preview.lines);
+    expect(second.ok).toBe(false);
+    const rows = await db.select().from(transactions).where(eq(transactions.userId, userId));
+    expect(rows).toHaveLength(2);
+  });
+
+  it('refuses a preview with too many rows', async () => {
+    const userId = await fixtures.createUser();
+    const big = new TextEncoder().encode(
+      'data;descricao;valor\n' +
+        Array.from(
+          { length: MAX_PREVIEW_ROWS + 1 },
+          (_, index) => `02/04/2026;Linha ${index};-1,00`,
+        ).join('\n'),
+    );
+    const { statement, store } = await seed(userId, big);
+    const preview = await startPreview(
+      userId,
+      statement.id,
+      {
+        dateColumn: 'data',
+        descriptionColumn: 'descricao',
+        amountColumn: 'valor',
+      },
+      store,
+    );
+    expect(preview).toEqual({ ok: false, reason: 'too_large' });
   });
 
   it('leaves an invoice payment out of the checked sum', () => {

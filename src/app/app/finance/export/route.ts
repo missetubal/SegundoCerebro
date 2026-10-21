@@ -1,5 +1,7 @@
+import {
+  exportFinance,
+} from '@/features/finance/server';
 import { auth } from '@/features/auth/server';
-import { exportFinance } from '@/features/finance/server';
 
 export async function GET(): Promise<Response> {
   const session = await auth();

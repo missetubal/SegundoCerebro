@@ -1,11 +1,14 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useActionState } from 'react';
 import { type ActionState, IDLE_STATE } from '@/shared/lib';
 import { secondaryButton, textInput } from '@/shared/ui';
 
 type Row = {
   id: string;
+  editHref: string;
   date: string;
   description: string;
   category: string;
@@ -52,7 +55,7 @@ export function BulkCategoryForm({ action, categories, rows }: Props) {
         </div>
       ) : (
         <div className='overflow-x-auto'>
-          <table className='w-full min-w-[720px] text-left text-sm'>
+          <table className='w-full min-w-[820px] text-left text-sm'>
             <thead>
               <tr className='border-b border-border text-[11px] uppercase tracking-wide text-muted'>
                 <th className='w-8 py-2' />
@@ -62,6 +65,7 @@ export function BulkCategoryForm({ action, categories, rows }: Props) {
                 <th className='py-2 font-medium'>Origem</th>
                 <th className='py-2 font-medium'>Tipo</th>
                 <th className='py-2 text-right font-medium'>Valor</th>
+                <th className='py-2 text-right font-medium'>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -87,6 +91,14 @@ export function BulkCategoryForm({ action, categories, rows }: Props) {
                     }`}
                   >
                     {row.amount}
+                  </td>
+                  <td className='py-3 text-right'>
+                    <Link
+                      href={row.editHref}
+                      className='inline-flex min-h-9 items-center rounded-lg px-2 text-sm font-medium text-muted transition-colors hover:bg-bg-app hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30'
+                    >
+                      Editar
+                    </Link>
                   </td>
                 </tr>
               ))}

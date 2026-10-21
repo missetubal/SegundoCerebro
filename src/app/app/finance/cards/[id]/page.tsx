@@ -1,11 +1,20 @@
+import {
+  formatMinor,
+  isCurrency,
+  BackLink,
+  FinancePage,
+  Panel,
+} from '@/features/finance';
+import {
+  getCard,
+  listInstitutions,
+  listStatements,
+} from '@/features/finance/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { CreditCard } from 'lucide-react';
 import { requireUserId } from '@/features/auth/server';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
-import { BackLink, FinancePage, Panel } from '@/features/finance/presentation/finance-shell';
-import { getCard, listInstitutions, listStatements } from '@/features/finance/server';
 import { secondaryButton } from '@/shared/ui';
 
 export default function CardDetailPage({

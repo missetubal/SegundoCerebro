@@ -302,11 +302,11 @@ async function assertInstrument(
   if (accountId) {
     const account = await activeAccount(userId, accountId);
     if (!account) {
-      const any = await db
+      const existing = await db
         .select({ id: financialAccounts.id })
         .from(financialAccounts)
         .where(ownedBy(financialAccounts, userId, accountId));
-      return { ok: false, reason: any.length > 0 ? 'archived' : 'not_found' };
+      return { ok: false, reason: existing.length > 0 ? 'archived' : 'not_found' };
     }
     return { ok: true, currency: account.currency.trim() };
   }

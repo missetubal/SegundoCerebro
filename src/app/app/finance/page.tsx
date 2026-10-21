@@ -1,13 +1,22 @@
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { totalsByCategory, summarizePeriod, type LedgerRow } from '@/features/finance/domain/aggregation';
-import { nextDueDate, todayInTimeZone } from '@/features/finance/domain/dates';
-import { formatMinor, isCurrency, type Currency } from '@/features/finance/domain/money';
-import { CategoryBars, SpendingTable } from '@/features/finance/presentation/charts';
-import { EmptyState, FinancePage, Panel } from '@/features/finance/presentation/finance-shell';
-import { formatDay, formatMonth, monthBounds } from '@/features/finance/presentation/format';
-import { ViewToggle } from '@/features/finance/presentation/view-toggle';
+import {
+  totalsByCategory,
+  summarizePeriod,
+  type LedgerRow,
+  nextDueDate,
+  todayInTimeZone,
+  formatMinor,
+  isCurrency,
+  type Currency,
+  CategoryBars,
+  SpendingTable,
+  EmptyState,
+  FinancePage,
+  Panel,
+  formatDay,
+  formatMonth,
+  monthBounds,
+  ViewToggle,
+} from '@/features/finance';
 import {
   listAccountBalances,
   listAccounts,
@@ -17,6 +26,9 @@ import {
   listTransactions,
   portfolio,
 } from '@/features/finance/server';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
 import { getPreferences } from '@/features/preferences/server';
 import { KpiTile, card, caption } from '@/shared/ui';
 

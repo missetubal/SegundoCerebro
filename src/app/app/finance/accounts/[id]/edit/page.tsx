@@ -1,13 +1,17 @@
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import { requireUserId } from '@/features/auth/server';
-import { AccountForm } from '@/features/finance';
-import { BackLink, FinancePage, FormShell } from '@/features/finance/presentation/finance-shell';
+import {
+  BackLink,
+  FinancePage,
+  FormShell,
+} from '@/features/finance';
 import {
   getAccount,
   listInstitutions,
   updateAccountAction,
 } from '@/features/finance/server';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { requireUserId } from '@/features/auth/server';
+import { AccountForm } from '@/features/finance';
 
 export default function EditAccountPage({
   params,

@@ -1,35 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { List } from 'lucide-react';
-import { type ActionState, IDLE_STATE } from '@/shared/lib';
+import { type ActionState } from '@/shared/lib';
 import { caption, card, primaryButton } from '@/shared/ui';
 import { reconcileIncluded } from '../domain/aggregation';
-import { formatMinor, isCurrency, parseAmountToMinor, type Currency } from '../domain/money';
+import { MAX_INCLUDED_ROWS } from '../domain/parse';
+import { formatMinor, parseAmountToMinor, type Currency } from '../domain/money';
 import {
   defaultDirection,
   TRANSACTION_TYPES,
-  type Direction,
   type TransactionType,
 } from '../domain/validation';
 import { formatDay } from './format';
 import { TYPE_LABELS } from './labels';
-import { ImportStepper, type ImportStepId } from './import-steps';
+import { ImportStepper } from './import-steps';
+import {
+  useImportReview,
+  type ColumnRole,
+  type ReviewLine,
+} from './use-import-review';
 
-export type ReviewLine = {
-  transactionDate: string;
-  postedDate: string | null;
-  description: string;
-  amountMinor: string;
-  type: TransactionType;
-  direction: Direction;
-  externalId: string | null;
-  incompatibleCurrency: boolean;
-  duplicate: boolean;
-  included: boolean;
-  categoryId: string | null;
-};
+export type { ReviewLine } from './use-import-review';
 
 type Option = { id: string; name: string };
 
@@ -44,8 +37,6 @@ type Props = {
   confirmAction: (state: ActionState, formData: FormData) => Promise<ActionState>;
 };
 
-type ColumnRole = 'date' | 'description' | 'amount' | 'debit' | 'credit' | 'ignore';
-
 const ROLE_LABELS: Record<ColumnRole, string> = {
   date: 'Data',
   description: 'Descrição',
@@ -57,26 +48,6 @@ const ROLE_LABELS: Record<ColumnRole, string> = {
 
 const ROLES = Object.keys(ROLE_LABELS) as ColumnRole[];
 
-function readPreview(state: ActionState): { batchId: string; lines: ReviewLine[] } | null {
-  if (state.status !== 'success') return null;
-  const extra = state as ActionState & { batchId?: string; lines?: ReviewLine[] };
-  if (!extra.batchId || !extra.lines) return null;
-  return { batchId: extra.batchId, lines: extra.lines };
-}
-
-function guessRole(header: string): ColumnRole {
-  const name = header
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase();
-  if (/(data|date)/.test(name)) return 'date';
-  if (/(histor|desc|memo|detalhe|lancamento)/.test(name)) return 'description';
-  if (/(debito|debit)/.test(name)) return 'debit';
-  if (/(credito|credit)/.test(name)) return 'credit';
-  if (/(valor|amount|value)/.test(name)) return 'amount';
-  return 'ignore';
-}
-
 function minorToDecimal(amountMinor: string): string {
   const minor = BigInt(amountMinor);
   const abs = minor < 0n ? -minor : minor;
@@ -85,271 +56,305 @@ function minorToDecimal(amountMinor: string): string {
   return `${whole},${cents}`;
 }
 
-export function ImportReview({
-  statementId,
-  headers,
-  currency,
-  instrument,
-  declaredTotalMinor,
-  categories,
-  startAction,
-  confirmAction,
-}: Props) {
-  const [preview, start, starting] = useActionState(startAction, IDLE_STATE);
-  const [confirmState, confirm, confirming] = useActionState(confirmAction, IDLE_STATE);
-  const [lines, setLines] = useState<ReviewLine[] | null>(null);
-  const [phase, setPhase] = useState<'review' | 'check'>('review');
-  const [targets, setTargets] = useState<Record<string, ColumnRole>>(() =>
-    Object.fromEntries(headers.map((header) => [header, guessRole(header)])),
-  );
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [hiddenMapBatch, setHiddenMapBatch] = useState<string | null>(null);
-  const loaded = readPreview(preview);
-  const visible = lines ?? loaded?.lines ?? null;
-  const money = isCurrency(currency) ? currency : null;
-  const confirmed = confirmState.status === 'success';
-
-  function update(index: number, patch: Partial<ReviewLine>) {
-    setLines((current) => {
-      const source = current ?? loaded?.lines ?? [];
-      return source.map((line, lineIndex) =>
-        lineIndex === index ? { ...line, ...patch } : line,
-      );
-    });
-  }
-
-  function column(role: ColumnRole): string {
-    return headers.find((header) => targets[header] === role) ?? '';
-  }
-
-  function onMap(event: FormEvent<HTMLFormElement>) {
-    const used = new Map<ColumnRole, number>();
-    for (const role of Object.values(targets)) {
-      if (role === 'ignore') continue;
-      used.set(role, (used.get(role) ?? 0) + 1);
-    }
-    const unique = [...used.values()].every((count) => count === 1);
-    const hasValue = used.has('amount') || used.has('debit') || used.has('credit');
-    const mixed = used.has('amount') && (used.has('debit') || used.has('credit'));
-    if (!unique || !used.has('date') || !used.has('description') || !hasValue || mixed) {
-      event.preventDefault();
-      setMapError(
-        'Indique uma coluna de data, uma de descrição e o valor — ou débito e crédito, sem repetir campo.',
-      );
-      return;
-    }
-    setMapError(null);
-  }
-
-  const included = (visible ?? []).filter((line) => line.included && !line.incompatibleCurrency);
-  const reconciliation = visible
-    ? reconcileIncluded(
-        included.map((line) => ({ type: line.type, amountMinor: BigInt(line.amountMinor) })),
-        declaredTotalMinor === null ? null : BigInt(declaredTotalMinor),
-      )
-    : null;
-
-  const mappingOpen = headers.length > 0 && (!loaded || hiddenMapBatch === loaded.batchId);
-  const step: ImportStepId = confirmed
-    ? 'done'
-    : mappingOpen
-      ? 'mapping'
-      : !visible
-        ? 'review'
-        : phase === 'check'
-          ? 'check'
-          : 'review';
+export function ImportReview(props: Props) {
+  const review = useImportReview(props);
+  const { confirmed, visible, loaded, mappingOpen, phase } = review;
 
   return (
     <div className='flex flex-col gap-6'>
-      <ImportStepper current={step} />
-      {preview.status === 'error' && (
-        <p className='text-sm text-rose-700 dark:text-rose-300'>{preview.message}</p>
+      <ImportStepper current={review.step} />
+      {review.preview.status === 'error' && (
+        <p className='text-sm text-rose-700 dark:text-rose-300'>{review.preview.message}</p>
       )}
-      {confirmState.status === 'error' && (
-        <p className='text-sm text-rose-700 dark:text-rose-300'>{confirmState.message}</p>
+      {review.confirmState.status === 'error' && (
+        <p className='text-sm text-rose-700 dark:text-rose-300'>{review.confirmState.message}</p>
       )}
 
-      {confirmed && (
-        <DoneCard count={included.length} />
-      )}
+      {confirmed && <DoneCard count={review.included.length} />}
 
       {!confirmed && mappingOpen && (
-        <form action={start} onSubmit={onMap} className={`${card} flex flex-col gap-4 p-5 sm:p-6`}>
-          <input type='hidden' name='statementId' value={statementId} />
-          <input type='hidden' name='dateColumn' value={column('date')} />
-          <input type='hidden' name='descriptionColumn' value={column('description')} />
-          <input type='hidden' name='amountColumn' value={column('amount')} />
-          <input type='hidden' name='debitColumn' value={column('debit')} />
-          <input type='hidden' name='creditColumn' value={column('credit')} />
-          <header className='flex flex-col gap-1'>
-            <h2 className='text-base font-semibold text-ink'>Mapeamento de colunas</h2>
-            <p className='text-sm text-muted'>Confirme qual coluna do arquivo corresponde a cada campo.</p>
-          </header>
-          {mapError && <p className='text-sm text-rose-700 dark:text-rose-300'>{mapError}</p>}
-          <ul className='flex flex-col gap-3'>
-            {headers.map((header) => (
-              <li
-                key={header}
-                className='flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3'
-              >
-                <span className='text-sm text-ink'>{header}</span>
-                <select
-                  aria-label={`Campo para ${header}`}
-                  value={targets[header]}
-                  onChange={(event) =>
-                    setTargets((current) => ({
-                      ...current,
-                      [header]: event.target.value as ColumnRole,
-                    }))
-                  }
-                  className='w-40 rounded-full border border-border bg-bg-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20'
-                >
-                  {ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {ROLE_LABELS[role]}
-                    </option>
-                  ))}
-                </select>
-              </li>
-            ))}
-          </ul>
-          <div className='flex items-center justify-between gap-3'>
-            <Link href={`/app/finance/statements/${statementId}`} className='text-sm font-medium text-ink'>
-              Voltar
-            </Link>
-            <button className={primaryButton} disabled={starting}>
-              Revisar lançamentos
-            </button>
-          </div>
-        </form>
+        <ColumnMappingForm
+          statementId={props.statementId}
+          headers={props.headers}
+          targets={review.targets}
+          mapError={review.mapError}
+          starting={review.starting}
+          start={review.start}
+          columnFor={review.columnFor}
+          validateMapping={review.validateMapping}
+          onTargetChange={review.setTarget}
+        />
       )}
 
-      {!confirmed && !visible && headers.length === 0 && (
-        <form action={start} className={`${card} flex flex-col items-center gap-4 px-6 py-16 text-center`}>
-          <input type='hidden' name='statementId' value={statementId} />
-          <h2 className='text-base font-semibold text-ink'>Arquivo OFX</h2>
-          <p className='max-w-md text-sm text-muted'>
-            Este arquivo já traz data, descrição e valor. A revisão abre direto.
-          </p>
-          <button className={primaryButton} disabled={starting}>
-            Revisar lançamentos
-          </button>
-        </form>
+      {!confirmed && !visible && props.headers.length === 0 && (
+        <OfxStartForm statementId={props.statementId} start={review.start} starting={review.starting} />
       )}
 
       {!confirmed && !mappingOpen && visible && loaded && phase === 'review' && (
-        <section className={`${card} flex flex-col gap-4 p-5 sm:p-6`}>
-          <header className='flex flex-col gap-1'>
-            <h2 className='text-base font-semibold text-ink'>Revisão dos lançamentos</h2>
-            <p className='text-sm text-muted'>
-              Ajuste a categoria, ignore linhas que não pertencem à fatura e verifique avisos de possível duplicado.
-            </p>
-          </header>
-          <div className='overflow-x-auto'>
-            <table className='w-full min-w-[720px] border-separate border-spacing-0 text-sm'>
-              <thead>
-                <tr className='text-left text-xs uppercase tracking-wide text-muted'>
-                  <th className='rounded-l-lg bg-bg-app px-3 py-2 font-medium'>Data</th>
-                  <th className='bg-bg-app px-3 py-2 font-medium'>Descrição</th>
-                  <th className='bg-bg-app px-3 py-2 font-medium'>Tipo</th>
-                  <th className='bg-bg-app px-3 py-2 font-medium'>Categoria</th>
-                  <th className='bg-bg-app px-3 py-2 text-right font-medium'>Valor</th>
-                  <th className='rounded-r-lg bg-bg-app px-3 py-2 text-right font-medium'>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((line, index) => (
-                  <ReviewRow
-                    key={`${line.externalId ?? line.description}-${index}`}
-                    line={line}
-                    money={money}
-                    instrument={instrument}
-                    categories={categories}
-                    onChange={(patch) => update(index, patch)}
-                  />
-                ))}
-              </tbody>
-            </table>
-            {visible.length === 0 && (
-              <p className='px-3 py-6 text-sm text-muted'>Nenhum lançamento nesse arquivo.</p>
-            )}
-          </div>
-          <div className='flex items-center justify-between gap-3'>
-            {headers.length > 0 ? (
-              <button
-                type='button'
-                className='text-sm font-medium text-ink'
-                onClick={() => {
-                  setPhase('review');
-                  setHiddenMapBatch(loaded.batchId);
-                }}
-              >
-                Voltar
-              </button>
-            ) : (
-              <Link href={`/app/finance/statements/${statementId}`} className='text-sm font-medium text-ink'>
-                Voltar
-              </Link>
-            )}
-            <button type='button' className={primaryButton} onClick={() => setPhase('check')}>
-              Conferir total
-            </button>
-          </div>
-        </section>
+        <ReviewTable
+          statementId={props.statementId}
+          hasHeaders={props.headers.length > 0}
+          lines={visible}
+          money={review.money}
+          instrument={props.instrument}
+          categories={props.categories}
+          onChange={review.update}
+          onBackToMapping={review.backToMapping}
+          onCheck={review.goToCheck}
+        />
       )}
 
-      {!confirmed && !mappingOpen && visible && loaded && phase === 'check' && reconciliation && (
-        <form action={confirm} className={`${card} flex flex-col items-center gap-4 px-6 py-12 text-center`}>
-          <input type='hidden' name='batchId' value={loaded.batchId} />
-          <input type='hidden' name='lines' value={JSON.stringify(visible)} />
-          <span className='inline-flex size-12 items-center justify-center rounded-full bg-bg-app text-muted'>
-            <List className='size-5' aria-hidden />
-          </span>
-          <div className='flex flex-col gap-1'>
-            <h2 className='text-xl font-semibold text-ink'>Conferência final</h2>
-            <p className='text-sm text-muted'>{importCount(included.length)}</p>
-          </div>
-          <div className='grid w-full max-w-lg gap-3 sm:grid-cols-2'>
-            <TotalCard
-              label='Total importado'
-              value={money ? formatMinor(reconciliation.checkedMinor, money) : '—'}
-            />
-            <TotalCard
-              label='Total informado'
-              value={
-                declaredTotalMinor === null || !money
-                  ? '—'
-                  : formatMinor(BigInt(declaredTotalMinor), money)
-              }
-            />
-          </div>
-          <p className='max-w-md text-sm text-muted'>
-            {reconciliation.differenceMinor === null || !money
-              ? 'Nenhum total informado — a conferência fica só com o total importado.'
-              : `Diferença de ${formatMinor(reconciliation.differenceMinor, money)}.`}
-          </p>
-          <SideTotals reconciliation={reconciliation} money={money} />
-          {included.length > 2000 && (
-            <p className='text-sm text-rose-700 dark:text-rose-300'>
-              Mais de 2000 linhas. Separe o arquivo antes de confirmar.
-            </p>
-          )}
-          <div className='flex items-center gap-4'>
-            <button
-              type='button'
-              className='text-sm font-medium text-ink'
-              onClick={() => setPhase('review')}
-            >
-              Voltar
-            </button>
-            <button className={primaryButton} disabled={confirming || included.length > 2000}>
-              Confirmar importação
-            </button>
-          </div>
-        </form>
+      {!confirmed && !mappingOpen && visible && loaded && phase === 'check' && review.reconciliation && (
+        <CheckPanel
+          batchId={loaded.batchId}
+          lines={visible}
+          includedCount={review.included.length}
+          reconciliation={review.reconciliation}
+          money={review.money}
+          declaredTotalMinor={props.declaredTotalMinor}
+          confirming={review.confirming}
+          confirm={review.confirm}
+          onBack={review.backToReview}
+        />
       )}
     </div>
+  );
+}
+
+function ColumnMappingForm({
+  statementId,
+  headers,
+  targets,
+  mapError,
+  starting,
+  start,
+  columnFor,
+  validateMapping,
+  onTargetChange,
+}: {
+  statementId: string;
+  headers: string[];
+  targets: Record<string, ColumnRole>;
+  mapError: string | null;
+  starting: boolean;
+  start: (payload: FormData) => void;
+  columnFor: (role: ColumnRole) => string;
+  validateMapping: (event: FormEvent<HTMLFormElement>) => void;
+  onTargetChange: (header: string, role: ColumnRole) => void;
+}) {
+  return (
+    <form action={start} onSubmit={validateMapping} className={`${card} flex flex-col gap-4 p-5 sm:p-6`}>
+      <input type='hidden' name='statementId' value={statementId} />
+      <input type='hidden' name='dateColumn' value={columnFor('date')} />
+      <input type='hidden' name='descriptionColumn' value={columnFor('description')} />
+      <input type='hidden' name='amountColumn' value={columnFor('amount')} />
+      <input type='hidden' name='debitColumn' value={columnFor('debit')} />
+      <input type='hidden' name='creditColumn' value={columnFor('credit')} />
+      <header className='flex flex-col gap-1'>
+        <h2 className='text-base font-semibold text-ink'>Mapeamento de colunas</h2>
+        <p className='text-sm text-muted'>Confirme qual coluna do arquivo corresponde a cada campo.</p>
+      </header>
+      {mapError && <p className='text-sm text-rose-700 dark:text-rose-300'>{mapError}</p>}
+      <ul className='flex flex-col gap-3'>
+        {headers.map((header) => (
+          <li
+            key={header}
+            className='flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3'
+          >
+            <span className='text-sm text-ink'>{header}</span>
+            <select
+              aria-label={`Campo para ${header}`}
+              value={targets[header]}
+              onChange={(event) => onTargetChange(header, event.target.value as ColumnRole)}
+              className='w-40 rounded-full border border-border bg-bg-card px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20'
+            >
+              {ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {ROLE_LABELS[role]}
+                </option>
+              ))}
+            </select>
+          </li>
+        ))}
+      </ul>
+      <div className='flex items-center justify-between gap-3'>
+        <Link href={`/app/finance/statements/${statementId}`} className='text-sm font-medium text-ink'>
+          Voltar
+        </Link>
+        <button className={primaryButton} disabled={starting}>
+          Revisar lançamentos
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function OfxStartForm({
+  statementId,
+  start,
+  starting,
+}: {
+  statementId: string;
+  start: (payload: FormData) => void;
+  starting: boolean;
+}) {
+  return (
+    <form action={start} className={`${card} flex flex-col items-center gap-4 px-6 py-16 text-center`}>
+      <input type='hidden' name='statementId' value={statementId} />
+      <h2 className='text-base font-semibold text-ink'>Arquivo OFX</h2>
+      <p className='max-w-md text-sm text-muted'>
+        Este arquivo já traz data, descrição e valor. A revisão abre direto.
+      </p>
+      <button className={primaryButton} disabled={starting}>
+        Revisar lançamentos
+      </button>
+    </form>
+  );
+}
+
+function ReviewTable({
+  statementId,
+  hasHeaders,
+  lines,
+  money,
+  instrument,
+  categories,
+  onChange,
+  onBackToMapping,
+  onCheck,
+}: {
+  statementId: string;
+  hasHeaders: boolean;
+  lines: ReviewLine[];
+  money: Currency | null;
+  instrument: 'account' | 'card';
+  categories: Option[];
+  onChange: (index: number, patch: Partial<ReviewLine>) => void;
+  onBackToMapping: () => void;
+  onCheck: () => void;
+}) {
+  return (
+    <section className={`${card} flex flex-col gap-4 p-5 sm:p-6`}>
+      <header className='flex flex-col gap-1'>
+        <h2 className='text-base font-semibold text-ink'>Revisão dos lançamentos</h2>
+        <p className='text-sm text-muted'>
+          Ajuste a categoria, ignore linhas que não pertencem à fatura e verifique avisos de possível duplicado.
+        </p>
+      </header>
+      <div className='overflow-x-auto'>
+        <table className='w-full min-w-[720px] border-separate border-spacing-0 text-sm'>
+          <thead>
+            <tr className='text-left text-xs uppercase tracking-wide text-muted'>
+              <th className='rounded-l-lg bg-bg-app px-3 py-2 font-medium'>Data</th>
+              <th className='bg-bg-app px-3 py-2 font-medium'>Descrição</th>
+              <th className='bg-bg-app px-3 py-2 font-medium'>Tipo</th>
+              <th className='bg-bg-app px-3 py-2 font-medium'>Categoria</th>
+              <th className='bg-bg-app px-3 py-2 text-right font-medium'>Valor</th>
+              <th className='rounded-r-lg bg-bg-app px-3 py-2 text-right font-medium'>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lines.map((line, index) => (
+              <ReviewRow
+                key={`${line.externalId ?? line.description}-${index}`}
+                line={line}
+                money={money}
+                instrument={instrument}
+                categories={categories}
+                onChange={(patch) => onChange(index, patch)}
+              />
+            ))}
+          </tbody>
+        </table>
+        {lines.length === 0 && (
+          <p className='px-3 py-6 text-sm text-muted'>Nenhum lançamento nesse arquivo.</p>
+        )}
+      </div>
+      <div className='flex items-center justify-between gap-3'>
+        {hasHeaders ? (
+          <button type='button' className='text-sm font-medium text-ink' onClick={onBackToMapping}>
+            Voltar
+          </button>
+        ) : (
+          <Link href={`/app/finance/statements/${statementId}`} className='text-sm font-medium text-ink'>
+            Voltar
+          </Link>
+        )}
+        <button type='button' className={primaryButton} onClick={onCheck}>
+          Conferir total
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function CheckPanel({
+  batchId,
+  lines,
+  includedCount,
+  reconciliation,
+  money,
+  declaredTotalMinor,
+  confirming,
+  confirm,
+  onBack,
+}: {
+  batchId: string;
+  lines: ReviewLine[];
+  includedCount: number;
+  reconciliation: ReturnType<typeof reconcileIncluded>;
+  money: Currency | null;
+  declaredTotalMinor: string | null;
+  confirming: boolean;
+  confirm: (payload: FormData) => void;
+  onBack: () => void;
+}) {
+  const tooMany = includedCount > MAX_INCLUDED_ROWS;
+  return (
+    <form action={confirm} className={`${card} flex flex-col items-center gap-4 px-6 py-12 text-center`}>
+      <input type='hidden' name='batchId' value={batchId} />
+      <input type='hidden' name='lines' value={JSON.stringify(lines)} />
+      <span className='inline-flex size-12 items-center justify-center rounded-full bg-bg-app text-muted'>
+        <List className='size-5' aria-hidden />
+      </span>
+      <div className='flex flex-col gap-1'>
+        <h2 className='text-xl font-semibold text-ink'>Conferência final</h2>
+        <p className='text-sm text-muted'>{importCount(includedCount)}</p>
+      </div>
+      <div className='grid w-full max-w-lg gap-3 sm:grid-cols-2'>
+        <TotalCard
+          label='Total importado'
+          value={money ? formatMinor(reconciliation.checkedMinor, money) : '—'}
+        />
+        <TotalCard
+          label='Total informado'
+          value={
+            declaredTotalMinor === null || !money
+              ? '—'
+              : formatMinor(BigInt(declaredTotalMinor), money)
+          }
+        />
+      </div>
+      <p className='max-w-md text-sm text-muted'>
+        {reconciliation.differenceMinor === null || !money
+          ? 'Nenhum total informado — a conferência fica só com o total importado.'
+          : `Diferença de ${formatMinor(reconciliation.differenceMinor, money)}.`}
+      </p>
+      <SideTotals reconciliation={reconciliation} money={money} />
+      {tooMany && (
+        <p className='text-sm text-rose-700 dark:text-rose-300'>
+          Mais de 2000 linhas. Separe o arquivo antes de confirmar.
+        </p>
+      )}
+      <div className='flex items-center gap-4'>
+        <button type='button' className='text-sm font-medium text-ink' onClick={onBack}>
+          Voltar
+        </button>
+        <button className={primaryButton} disabled={confirming || tooMany}>
+          Confirmar importação
+        </button>
+      </div>
+    </form>
   );
 }
 

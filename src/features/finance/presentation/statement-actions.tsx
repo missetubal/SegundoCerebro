@@ -79,6 +79,25 @@ export function ReplaceFileForm({
   );
 }
 
+export function MarkReviewedButton({
+  statementId,
+  action,
+}: {
+  statementId: string;
+  action: Action;
+}) {
+  const [state, formAction, pending] = useActionState(action, IDLE_STATE);
+  return (
+    <form action={formAction} className='flex items-center gap-2'>
+      {state.status === 'error' && <span className={errorClass}>{state.message}</span>}
+      <input type='hidden' name='id' value={statementId} />
+      <button className={secondaryButton} disabled={pending}>
+        Marcar como revisada
+      </button>
+    </form>
+  );
+}
+
 export function UndoBatchButton({ batchId, action }: { batchId: string; action: Action }) {
   const [state, formAction, pending] = useActionState(action, IDLE_STATE);
   return (

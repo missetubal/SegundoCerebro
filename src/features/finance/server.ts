@@ -10,6 +10,7 @@ export {
   createCategoryAction,
   createInstitutionAction,
   createTransactionAction,
+  deleteTransactionAndRedirectAction,
   deleteAccountAction,
   deleteCategoryAction,
   deleteTransactionAction,
@@ -28,6 +29,7 @@ export {
   deleteAssetAction,
   deleteAttachmentAction,
   deleteImportedAction,
+  markStatementReviewedAction,
   replaceAttachmentAction,
   startPreviewAction,
   undoImportAction,
@@ -52,6 +54,7 @@ export {
   updateCard,
 } from './infra/accounts';
 export { exportFinance } from './infra/export-data';
+export { defaultBlobStore, localBlobKey } from './infra/blob-store';
 export { importSource, listBatches } from './infra/imports';
 export {
   getAsset,
@@ -74,5 +77,6 @@ export {
 export {
   getStatement,
   listStatements,
+  markStatementReviewed,
   signedStatementUrl,
 } from './infra/statements';

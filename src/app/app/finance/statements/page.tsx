@@ -1,16 +1,21 @@
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { FileText } from 'lucide-react';
-import { requireUserId } from '@/features/auth/server';
-import { formatMinor, isCurrency } from '@/features/finance/domain/money';
 import {
+  formatMinor,
+  isCurrency,
   EmptyState,
   FinancePage,
   Panel,
   StatusPill,
-} from '@/features/finance/presentation/finance-shell';
-import { formatMonth } from '@/features/finance/presentation/format';
-import { listAccounts, listCards, listStatements } from '@/features/finance/server';
+  formatMonth,
+} from '@/features/finance';
+import {
+  listAccounts,
+  listCards,
+  listStatements,
+} from '@/features/finance/server';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { FileText } from 'lucide-react';
+import { requireUserId } from '@/features/auth/server';
 import { caption } from '@/shared/ui';
 
 const STATUS: Record<string, { label: string; tone: 'neutral' | 'success' | 'info' }> = {
