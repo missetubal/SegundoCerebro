@@ -12,7 +12,9 @@ import {
   Pill,
   Settings,
   Target,
+  Wallet,
 } from 'lucide-react';
+import { FinanceNav } from '@/features/finance/presentation/finance-nav';
 import { caption } from '@/shared/ui';
 
 export type SidebarArea = {
@@ -94,6 +96,12 @@ export function AppSidebar({ areas, userName }: Props) {
           active={is('/app/goals')}
           icon={<Target className='size-3.5' aria-hidden />}
         />
+        <NavLink
+          href='/app/finance'
+          label='Finanças'
+          active={is('/app/finance')}
+          icon={<Wallet className='size-3.5' aria-hidden />}
+        />
       </nav>
       <aside className='hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-bg-card md:flex'>
       <div className='flex flex-col gap-0.5 border-b border-border px-4 py-4'>
@@ -140,6 +148,13 @@ export function AppSidebar({ areas, userName }: Props) {
             active={is('/app/medications')}
             icon={<Pill className='size-3.5' aria-hidden />}
           />
+          {!is('/app/finance') && (
+            <NavLink
+              href='/app/finance'
+              label='Finanças'
+              icon={<Wallet className='size-3.5' aria-hidden />}
+            />
+          )}
         </div>
 
         {areas.length > 0 && (
@@ -170,6 +185,8 @@ export function AppSidebar({ areas, userName }: Props) {
             Crie áreas para montar a navegação.
           </p>
         )}
+
+        {is('/app/finance') && <FinanceNav placement='sidebar' />}
 
         <div className='flex flex-col gap-0.5'>
           <span className={`${caption} px-2.5 font-semibold uppercase`}>
